@@ -1,4 +1,4 @@
-﻿using Heck.Settings;
+using Heck.Settings;
 using JetBrains.Annotations;
 using SiraUtil.Affinity;
 
@@ -22,7 +22,7 @@ internal class ReLoadRestart : IAffinity
     [AffinityPatch(typeof(MenuTransitionsHelper), nameof(MenuTransitionsHelper.HandleMainGameSceneDidFinish))]
     private void Prefix(
         LevelCompletionResults levelCompletionResults,
-        StandardLevelScenesTransitionSetupDataSO ____standardLevelScenesTransitionSetupData)
+        StandardLevelScenesTransitionSetupData ____standardLevelScenesTransitionSetupData)
     {
         if (levelCompletionResults.levelEndAction != LevelCompletionResults.LevelEndAction.Restart)
         {

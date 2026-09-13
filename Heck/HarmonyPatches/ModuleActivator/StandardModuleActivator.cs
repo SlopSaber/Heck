@@ -1,4 +1,4 @@
-﻿#if !PRE_V1_37_1
+#if !PRE_V1_37_1
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -42,9 +42,9 @@ internal class StandardModuleActivator : IInitializable
     [HarmonyTargetMethods]
     private static IEnumerable<MethodBase> TargetMethods()
     {
-        return typeof(StandardLevelScenesTransitionSetupDataSO)
+        return typeof(StandardLevelScenesTransitionSetupData)
             .GetMethods()
-            .Where(n => n.Name == nameof(StandardLevelScenesTransitionSetupDataSO.Init));
+            .Where(n => n.Name == nameof(StandardLevelScenesTransitionSetupData.Init));
     }
 }
 #endif

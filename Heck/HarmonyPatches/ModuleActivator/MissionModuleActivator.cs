@@ -1,4 +1,4 @@
-﻿#if !PRE_V1_37_1
+#if !PRE_V1_37_1
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -39,9 +39,9 @@ internal class MissionModuleActivator : IInitializable
     [HarmonyTargetMethods]
     private static IEnumerable<MethodBase> TargetMethods()
     {
-        return typeof(MissionLevelScenesTransitionSetupDataSO)
+        return typeof(MissionLevelScenesTransitionSetupData)
             .GetMethods()
-            .Where(n => n.Name == nameof(MissionLevelScenesTransitionSetupDataSO.Init));
+            .Where(n => n.Name == nameof(MissionLevelScenesTransitionSetupData.Init));
     }
 }
 #endif

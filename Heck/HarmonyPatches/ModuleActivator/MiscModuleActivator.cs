@@ -1,4 +1,4 @@
-﻿#if !PRE_V1_37_1
+#if !PRE_V1_37_1
 using Heck.Module;
 using SiraUtil.Affinity;
 
@@ -15,8 +15,8 @@ internal class MiscModuleActivator : IAffinity
 
     [AffinityPrefix]
     [AffinityPatch(
-        typeof(MultiplayerLevelScenesTransitionSetupDataSO),
-        nameof(MultiplayerLevelScenesTransitionSetupDataSO.Init))]
+        typeof(MultiplayerLevelScenesTransitionSetupData),
+        nameof(MultiplayerLevelScenesTransitionSetupData.Init))]
     private void MultiplayerPrefix(in BeatmapKey beatmapKey, BeatmapLevel beatmapLevel)
     {
         OverrideEnvironmentSettings? overrideEnvironmentSettings = null;
@@ -25,8 +25,8 @@ internal class MiscModuleActivator : IAffinity
 
     [AffinityPrefix]
     [AffinityPatch(
-        typeof(TutorialScenesTransitionSetupDataSO),
-        nameof(TutorialScenesTransitionSetupDataSO.Init))]
+        typeof(TutorialScenesTransitionSetupData),
+        nameof(TutorialScenesTransitionSetupData.Init))]
     private void TutorialPrefix()
     {
         OverrideEnvironmentSettings? overrideEnvironmentSettings = null;

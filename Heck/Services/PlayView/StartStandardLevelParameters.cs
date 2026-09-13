@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 #if !PRE_V1_37_1
 using Zenject;
@@ -45,15 +45,14 @@ public class StartStandardLevelParameters
 #if !PRE_V1_37_1 && !LATEST
         Action<DiContainer>? afterSceneSwitchCallback,
 #endif
-        Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults>? levelFinishedCallback,
-#if !V1_29_1
-        Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults>? levelRestartedCallback,
-    #if LATEST
-        IBeatmapLevelData? beatmapLevelData,
-    #endif
+        Action<StandardLevelScenesTransitionSetupData, LevelCompletionResults>? levelFinishedCallback,
+        Action<LevelScenesTransitionSetupData, LevelCompletionResults>? levelRestartedCallback,
+#if LATEST
+        IBeatmapLevelData? beatmapLevelData)
+#elif !V1_29_1
         RecordingToolManager.SetupData? recordingToolData)
 #else
-        Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults>? levelRestartedCallback)
+        )
 #endif
     {
         GameMode = gameMode;
@@ -90,7 +89,7 @@ public class StartStandardLevelParameters
 #endif
         LevelFinishedCallback = levelFinishedCallback;
         LevelRestartedCallback = levelRestartedCallback;
-#if !V1_29_1
+#if !V1_29_1 && !LATEST
         RecordingToolData = recordingToolData;
 #endif
 #if LATEST
@@ -133,7 +132,7 @@ public class StartStandardLevelParameters
         BeforeSceneSwitchCallback = original.BeforeSceneSwitchCallback;
         LevelFinishedCallback = original.LevelFinishedCallback;
         LevelRestartedCallback = original.LevelRestartedCallback;
-#if !V1_29_1
+#if !V1_29_1 && !LATEST
         RecordingToolData = original.RecordingToolData;
 #endif
 #if LATEST
@@ -191,11 +190,11 @@ public class StartStandardLevelParameters
     public Action<DiContainer>? AfterSceneSwitchCallback { get; }
 #endif
 
-    public Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults>? LevelFinishedCallback { get; }
+    public Action<StandardLevelScenesTransitionSetupData, LevelCompletionResults>? LevelFinishedCallback { get; }
 
-    public Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults>? LevelRestartedCallback { get; }
+    public Action<LevelScenesTransitionSetupData, LevelCompletionResults>? LevelRestartedCallback { get; }
 
-#if !V1_29_1
+#if !V1_29_1 && !LATEST
     public RecordingToolManager.SetupData? RecordingToolData { get; }
 #endif
 

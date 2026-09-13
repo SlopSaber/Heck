@@ -52,7 +52,9 @@ internal class PlayerTransformsNoodlePatch : IAffinity
         ____leftHandPseudoLocalRot = _noodlePlayerTransformManager.LeftHand.InverseTransformRotation(____leftHandTransform.rotation);
 
 #if !PRE_V1_40_8
-        if (____beatmapKey != null && ____beatmapKey.Value.beatmapCharacteristic.containsRotationEvents)
+        if (____beatmapKey != null &&
+            (____beatmapKey.Value.characteristic == BeatmapCharacteristic.Degree90 ||
+             ____beatmapKey.Value.characteristic == BeatmapCharacteristic.Degree360))
         {
             return false;
         }

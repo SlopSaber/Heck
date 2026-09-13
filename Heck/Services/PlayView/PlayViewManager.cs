@@ -318,11 +318,11 @@ public sealed class PlayViewManager : IDisposable
             null,
 #endif
             _currentParameters.LevelFinishedCallback,
-#if !V1_29_1
+#if LATEST
             _currentParameters.LevelRestartedCallback,
-        #if LATEST
-            _currentParameters.BeatmapLevelData,
-        #endif
+            _currentParameters.BeatmapLevelData);
+#elif !V1_29_1
+            _currentParameters.LevelRestartedCallback,
             _currentParameters.RecordingToolData);
 #else
             _currentParameters.LevelRestartedCallback);

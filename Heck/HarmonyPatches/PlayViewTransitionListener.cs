@@ -9,7 +9,7 @@ internal class FlowCoordinatorTransitionListener : IAffinity
     internal event Action<FlowCoordinator>? TransitionFinished;
 
     [AffinityPostfix]
-    [AffinityPatch(typeof(FlowCoordinator), nameof(FlowCoordinator.TransitionDidFinish))]
+    [AffinityPatch(typeof(FlowCoordinator), "TransitionDidFinish")]
     private void Postfix(FlowCoordinator __instance)
     {
         TransitionFinished?.Invoke(__instance);

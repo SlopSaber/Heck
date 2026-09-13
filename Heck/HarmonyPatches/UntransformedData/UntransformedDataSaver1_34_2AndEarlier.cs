@@ -1,4 +1,4 @@
-﻿#if PRE_V1_37_1
+#if PRE_V1_37_1
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -69,7 +69,7 @@ public class HeckGameplayCoreSceneSetupData : GameplayCoreSceneSetupData
 
     // i hate gettype i hate gettype i hate gettype
     [HarmonyTranspiler]
-    [HarmonyPatch(typeof(ScenesTransitionSetupDataSO), nameof(ScenesTransitionSetupDataSO.InstallBindings))]
+    [HarmonyPatch(typeof(ScenesTransitionSetupData), nameof(ScenesTransitionSetupData.InstallBindings))]
     private static IEnumerable<CodeInstruction> HeckOff(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)
@@ -100,9 +100,9 @@ public class HeckGameplayCoreSceneSetupData : GameplayCoreSceneSetupData
     }
 
     [HarmonyTranspiler]
-    [HarmonyPatch(typeof(StandardLevelScenesTransitionSetupDataSO), "Init")]
-    [HarmonyPatch(typeof(MultiplayerLevelScenesTransitionSetupDataSO), "Init")]
-    [HarmonyPatch(typeof(MissionLevelScenesTransitionSetupDataSO), "Init")]
+    [HarmonyPatch(typeof(StandardLevelScenesTransitionSetupData), "Init")]
+    [HarmonyPatch(typeof(MultiplayerLevelScenesTransitionSetupData), "Init")]
+    [HarmonyPatch(typeof(MissionLevelScenesTransitionSetupData), "Init")]
     private static IEnumerable<CodeInstruction> Replace(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)

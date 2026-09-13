@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 
 namespace Heck.PlayView;
@@ -28,7 +28,7 @@ public class StartMultiplayerLevelParameters : StartStandardLevelParameters
         string backButtonText,
         bool useTestNoteCutSoundEffects,
         Action beforeSceneSwitchCallback,
-        Action<MultiplayerLevelScenesTransitionSetupDataSO, MultiplayerResultsData> levelFinishedCallback,
+        Action<MultiplayerLevelScenesTransitionSetupData, MultiplayerResultsData> levelFinishedCallback,
         Action<DisconnectedReason> didDisconnectCallback)
         : base(
             gameMode,
@@ -69,9 +69,6 @@ public class StartMultiplayerLevelParameters : StartStandardLevelParameters
             null,
 #endif
             null,
-#if !V1_29_1
-            null,
-#endif
             null)
     {
 #if !LATEST
@@ -111,7 +108,7 @@ public class StartMultiplayerLevelParameters : StartStandardLevelParameters
     #endif
 #endif
 
-    public Action<MultiplayerLevelScenesTransitionSetupDataSO, MultiplayerResultsData>? MultiplayerLevelFinishedCallback
+    public Action<MultiplayerLevelScenesTransitionSetupData, MultiplayerResultsData>? MultiplayerLevelFinishedCallback
     {
         get;
     }

@@ -1,4 +1,4 @@
-﻿#if PRE_V1_37_1
+#if PRE_V1_37_1
 using Heck.Module;
 using SiraUtil.Affinity;
 
@@ -15,8 +15,8 @@ internal class SceneTransitionModuleActivator : IAffinity
 
     [AffinityPrefix]
     [AffinityPatch(
-        typeof(MissionLevelScenesTransitionSetupDataSO),
-        nameof(MissionLevelScenesTransitionSetupDataSO.Init))]
+        typeof(MissionLevelScenesTransitionSetupData),
+        nameof(MissionLevelScenesTransitionSetupData.Init))]
     private void MissionPrefix(IDifficultyBeatmap difficultyBeatmap)
     {
         OverrideEnvironmentSettings? overrideEnvironmentSettings = null;
@@ -25,8 +25,8 @@ internal class SceneTransitionModuleActivator : IAffinity
 
     [AffinityPrefix]
     [AffinityPatch(
-        typeof(MultiplayerLevelScenesTransitionSetupDataSO),
-        nameof(MultiplayerLevelScenesTransitionSetupDataSO.Init))]
+        typeof(MultiplayerLevelScenesTransitionSetupData),
+        nameof(MultiplayerLevelScenesTransitionSetupData.Init))]
     private void MultiplayerPrefix(IDifficultyBeatmap difficultyBeatmap)
     {
         OverrideEnvironmentSettings? overrideEnvironmentSettings = null;
@@ -35,8 +35,8 @@ internal class SceneTransitionModuleActivator : IAffinity
 
     [AffinityPrefix]
     [AffinityPatch(
-        typeof(StandardLevelScenesTransitionSetupDataSO),
-        nameof(StandardLevelScenesTransitionSetupDataSO.Init))]
+        typeof(StandardLevelScenesTransitionSetupData),
+        nameof(StandardLevelScenesTransitionSetupData.Init))]
     private void StandardPrefix(
         IDifficultyBeatmap difficultyBeatmap,
         ref OverrideEnvironmentSettings? overrideEnvironmentSettings)
@@ -46,8 +46,8 @@ internal class SceneTransitionModuleActivator : IAffinity
 
     [AffinityPrefix]
     [AffinityPatch(
-        typeof(TutorialScenesTransitionSetupDataSO),
-        nameof(TutorialScenesTransitionSetupDataSO.Init))]
+        typeof(TutorialScenesTransitionSetupData),
+        nameof(TutorialScenesTransitionSetupData.Init))]
     private void TutorialPrefix()
     {
         OverrideEnvironmentSettings? overrideEnvironmentSettings = null;

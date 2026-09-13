@@ -1,4 +1,4 @@
-﻿#if !PRE_V1_37_1
+#if !PRE_V1_37_1
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -48,21 +48,13 @@ public class HeckGameplayCoreSceneSetupData : GameplayCoreSceneSetupData
             original._beatmapDataLoader,
             original._beatmapLevelsEntitlementModel,
             original._enableBeatmapDataCaching,
-#if LATEST
             original.environmentsListModel,
             original._allowNullBeatmapLevelData,
             original._beatmapLevelsModel,
-            original.beatmapLevelData,
-#else
-            original._allowNullBeatmapLevelData,
-    #if !PRE_V1_40_8
-            original.environmentsListModel,
-    #endif
-#endif
-            original.recordingToolData)
+            original.beatmapLevelData)
     {
         GameplayCoreSceneSetupData @this = this;
-        _beatmapLevelsModelAccessor(ref @this) = original._beatmapLevelsModel;
+        _beatmapLevelsModelAccessor(ref @this) = original._beatmapLevelsModel!;
         beatmapLevelData = original.beatmapLevelData;
     }
 
@@ -77,7 +69,7 @@ public class HeckGameplayCoreSceneSetupData : GameplayCoreSceneSetupData
 
     // i hate gettype i hate gettype i hate gettype
     [HarmonyTranspiler]
-    [HarmonyPatch(typeof(ScenesTransitionSetupDataSO), nameof(ScenesTransitionSetupDataSO.InstallBindings))]
+    [HarmonyPatch(typeof(ScenesTransitionSetupData), nameof(ScenesTransitionSetupData.InstallBindings))]
     private static IEnumerable<CodeInstruction> HeckOff(IEnumerable<CodeInstruction> instructions)
     {
         return new CodeMatcher(instructions)
@@ -90,16 +82,5 @@ public class HeckGameplayCoreSceneSetupData : GameplayCoreSceneSetupData
             .InstructionEnumeration();
     }
 
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(GameplayCoreSceneSetupData), nameof(TransformBeatmapData))]
-    private static void OverrideGetTransformedBeatmapDataAsync(
-        GameplayCoreSceneSetupData __instance,
-        IReadonlyBeatmapData beatmapData)
-    {
-        if (__instance is HeckGameplayCoreSceneSetupData hecked)
-        {
-            hecked._untransformedBeatmapData = beatmapData;
-        }
-    }
 }
 #endif

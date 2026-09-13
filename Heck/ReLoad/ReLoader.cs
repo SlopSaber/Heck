@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
 using Heck.Animation;
@@ -12,9 +13,6 @@ using SiraUtil.Logging;
 using UnityEngine;
 using UnityEngine.Scripting;
 using Zenject;
-#if PRE_V1_37_1
-using System.Threading.Tasks;
-#endif
 
 namespace Heck.ReLoad;
 
@@ -90,7 +88,7 @@ public class ReLoader : ITickable
         IDifficultyBeatmap difficultyBeatmap,
 #endif
         ReLoaderLoader reLoaderLoader,
-        StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupDataSO,
+        StandardLevelScenesTransitionSetupData standardLevelScenesTransitionSetupData,
         GameplayCoreSceneSetupData gameplayCoreSceneSetupData,
         IReadonlyBeatmapData beatmapData,
         BeatmapObjectManager beatmapObjectManager,
@@ -209,12 +207,15 @@ public class ReLoader : ITickable
         BeatmapLevel beatmapLevel = _gameplayCoreSceneSetupData.beatmapLevel;
         BeatmapKey beatmapKey = _gameplayCoreSceneSetupData.beatmapKey;
         float beatsPerMinute = beatmapLevel.beatsPerMinute;
-        EnvironmentName environmentName = beatmapLevel.GetEnvironmentName(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
+        EnvironmentName environmentName = beatmapLevel.GetEnvironmentName(beatmapKey.characteristic, beatmapKey.difficulty);
 #if !PRE_V1_40_8
         EnvironmentInfoSO targetEnvironmentInfo = _gameplayCoreSceneSetupData.targetEnvironmentInfo;
 #else
         EnvironmentInfoSO targetEnvironmentInfo = _gameplayCoreSceneSetupData.environmentInfo;
 #endif
+#if LATEST
+        IReadonlyBeatmapData beatmapData = _gameplayCoreSceneSetupData.transformedBeatmapData!;
+#else
         IReadonlyBeatmapData beatmapData = _gameplayCoreSceneSetupData.TransformBeatmapData(
             _gameplayCoreSceneSetupData._beatmapDataLoader.LoadBeatmapData(
                 _gameplayCoreSceneSetupData.beatmapLevelData!,
@@ -228,12 +229,14 @@ public class ReLoader : ITickable
                 BeatmapLevelDataVersion.Original,
                 _gameplayCoreSceneSetupData.gameplayModifiers,
                 _gameplayCoreSceneSetupData.playerSpecificSettings)!);
-#else
+#endif
+#if PRE_V1_37_1
         _reLoaderLoader.Reload(_difficultyBeatmap);
         IReadonlyBeatmapData beatmapData =
             Task.Run<IReadonlyBeatmapData>(
                     async () => await _gameplayCoreSceneSetupData.GetTransformedBeatmapDataAsync())
                 .Result;
+#endif
 #endif
         FillBeatmapData(beatmapData, _beatmapData);
 

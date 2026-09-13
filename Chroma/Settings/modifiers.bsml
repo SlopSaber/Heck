@@ -1,7 +1,7 @@
 ﻿<bg
 >
   <vertical horizontal-fit='PreferredSize' vertical-fit='PreferredSize' preferred-width='90' spacing='0'
-            anchor-max-y='1.35'>
+            anchor-max-y='1.15'>
     <bool-setting text='Use Custom Environment' value='environmentenabled' apply-on-change='true'
                   hover-hint='Yay custom environments!!!'/>
     <dropdown-list-setting text='Custom Environment' value='environment' apply-on-change='true'
@@ -14,5 +14,9 @@
                   hover-hint='Disable everything Chroma, but you&apos;ll break my heart.'/>
     <bool-setting text='Force Zen Mode Walls' value='zenwalls' apply-on-change='true'
                   hover-hint='Forces walls to be enabled in the Zen Mode modifier.'/>
+    <bool-setting text='Force Map Environment When Chroma' value='forcemapenvchroma' apply-on-change='true'
+                  hover-hint='Force the map environment when Chroma data is present.'/>
+    <bool-setting text='Force Map Environment When V3' value='forcemapenvv3' apply-on-change='true'
+                  hover-hint='Force the map environment when using v3 custom data.'/>
   </vertical>
 </bg>

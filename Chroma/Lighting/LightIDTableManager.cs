@@ -46,7 +46,7 @@ internal class LightIDTableManager
         _log = log;
         _config = config;
         _environmentOverrideChecker = environmentOverrideChecker;
-        string environmentName = environmentSceneSetupData.environmentInfo.serializedName;
+        string environmentName = environmentSceneSetupData.environmentSerializedName;
         Dictionary<int, Dictionary<int, int>> loadedTable;
         if (_lightIDTable.TryGetValue(environmentName, out Dictionary<int, Dictionary<int, int>> selectedTable))
         {

@@ -119,6 +119,30 @@ internal class ChromaSettingsUI : IInitializable, IDisposable
     }
 
     [UsedImplicitly]
+    [UIValue("forcemapenvchroma")]
+    public bool ForceMapEnvironmentWhenChroma
+    {
+        get => _config.ForceMapEnvironmentWhenChroma;
+        set
+        {
+            ClearCache();
+            _config.ForceMapEnvironmentWhenChroma = value;
+        }
+    }
+
+    [UsedImplicitly]
+    [UIValue("forcemapenvv3")]
+    public bool ForceMapEnvironmentWhenV3
+    {
+        get => _config.ForceMapEnvironmentWhenV3;
+        set
+        {
+            ClearCache();
+            _config.ForceMapEnvironmentWhenV3 = value;
+        }
+    }
+
+    [UsedImplicitly]
     [UIValue("environmentenabled")]
     public bool CustomEnvironmentEnabled
     {

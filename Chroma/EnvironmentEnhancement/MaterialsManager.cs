@@ -102,6 +102,16 @@ internal class MaterialsManager : IDisposable
             return info;
         }
 
+        if (name == "Light")
+        {
+            return CreateMaterialInfo(ShaderType.TransparentLight, null, null, null);
+        }
+
+        if (Enum.TryParse(name, out ShaderType shaderType))
+        {
+            return CreateMaterialInfo(shaderType, null, null, null);
+        }
+
         throw new InvalidOperationException($"No material with name [{name}].");
     }
 
@@ -115,6 +125,15 @@ internal class MaterialsManager : IDisposable
             .ToArray();
         List<Track>? track = customData.GetNullableTrackArray(_beatmapTracks, _v2)?.ToList();
 
+        return CreateMaterialInfo(shaderType, color, shaderKeywords, track);
+    }
+
+    private MaterialInfo CreateMaterialInfo(
+        ShaderType shaderType,
+        Color? color,
+        string[]? shaderKeywords,
+        List<Track>? track)
+    {
         Material originalMaterial = shaderType switch
         {
             ShaderType.Standard => _standardMaterial,

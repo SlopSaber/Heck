@@ -193,14 +193,9 @@ public class LightColorizer
         Initialize(lightSwitchEventEffect._lightColor0Boost, 2);
         Initialize(lightSwitchEventEffect._lightColor1Boost, 3);
 
-        List<ILightWithId>? lights = lightManager._lights[lightSwitchEventEffect.lightsId];
-
-        // possible uninitialized
-        if (lights == null)
-        {
-            lights = new List<ILightWithId>(10);
-            lightManager._lights[lightSwitchEventEffect.lightsId] = lights;
-        }
+        ILightWithId[] lights = lightSwitchEventEffect.lightsId < lightManager._oldMapping.Length
+            ? lightManager._oldMapping[lightSwitchEventEffect.lightsId].lightInstances ?? []
+            : [];
 
         Lights = lights;
         return;

@@ -104,7 +104,7 @@ internal class EnvironmentModule : IModule
     {
 #if !PRE_V1_37_1
         EnvironmentName environmentName = beatmapLevel.GetEnvironmentName(
-            beatmapKey.beatmapCharacteristic,
+            beatmapKey.characteristic,
             beatmapKey.difficulty);
         EnvironmentInfoSO environmentInfo =
             _environmentsListModel.GetEnvironmentInfoBySerializedNameSafe(environmentName);

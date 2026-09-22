@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using IPA.Utilities;
 
@@ -18,6 +19,10 @@ public class HeckGameplayCoreSceneSetupData : GameplayCoreSceneSetupData
     private static readonly FieldAccessor<GameplayCoreSceneSetupData, BeatmapLevelsModel>.Accessor
         _beatmapLevelsModelAccessor =
             FieldAccessor<GameplayCoreSceneSetupData, BeatmapLevelsModel>.GetAccessor(nameof(_beatmapLevelsModel));
+
+    // 1.45 loads and transforms inside BeatmapDataLoader. Associate those two
+    // objects by identity, then capture the source when setup data receives it.
+    private static readonly ConditionalWeakTable<IReadonlyBeatmapData, IReadonlyBeatmapData> _untransformedByTransformed = new();
 
     private IReadonlyBeatmapData? _untransformedBeatmapData;
 
@@ -61,6 +66,37 @@ public class HeckGameplayCoreSceneSetupData : GameplayCoreSceneSetupData
     public IReadonlyBeatmapData UntransformedBeatmapData =>
         _untransformedBeatmapData ??
         throw new InvalidOperationException($"[{nameof(_untransformedBeatmapData)}] was null.");
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(BeatmapDataTransformHelper), nameof(BeatmapDataTransformHelper.CreateTransformedBeatmapData))]
+    private static void CaptureUntransformed(IReadonlyBeatmapData beatmapData, out IReadonlyBeatmapData __state)
+    {
+        __state = beatmapData;
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(BeatmapDataTransformHelper), nameof(BeatmapDataTransformHelper.CreateTransformedBeatmapData))]
+    private static void AssociateTransformed(IReadonlyBeatmapData __state, IReadonlyBeatmapData __result)
+    {
+        if (__state == null || __result == null)
+        {
+            return;
+        }
+
+        _untransformedByTransformed.Remove(__result);
+        _untransformedByTransformed.Add(__result, __state);
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(GameplayCoreSceneSetupData), "set_transformedBeatmapData")]
+    private static void CaptureForSetupData(GameplayCoreSceneSetupData __instance, IReadonlyBeatmapData value)
+    {
+        if (__instance is HeckGameplayCoreSceneSetupData hecked && value != null &&
+            _untransformedByTransformed.TryGetValue(value, out IReadonlyBeatmapData untransformed))
+        {
+            hecked._untransformedBeatmapData = untransformed;
+        }
+    }
 
     private static Type HeckGetType(Type original)
     {

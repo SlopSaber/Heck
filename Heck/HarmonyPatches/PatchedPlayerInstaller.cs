@@ -53,7 +53,15 @@ internal class PatchedPlayerInstaller : IAffinity
             IReadonlyBeatmapData untransformedBeatmapData;
             if (sceneSetupData is HeckGameplayCoreSceneSetupData hecked)
             {
-                untransformedBeatmapData = hecked.UntransformedBeatmapData;
+                try
+                {
+                    untransformedBeatmapData = hecked.UntransformedBeatmapData;
+                }
+                catch (System.InvalidOperationException)
+                {
+                    _log.Warn("No untransformed beatmap data was captured; using transformed custom data.");
+                    untransformedBeatmapData = customBeatmapData;
+                }
             }
             else
             {

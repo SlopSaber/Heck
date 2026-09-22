@@ -81,6 +81,5 @@ public class HeckGameplayCoreSceneSetupData : GameplayCoreSceneSetupData
             .InsertAndAdvance(new CodeInstruction(OpCodes.Call, _heckType))
             .InstructionEnumeration();
     }
-
 }
 #endif

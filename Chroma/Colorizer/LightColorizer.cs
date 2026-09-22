@@ -239,7 +239,7 @@ public class LightColorizer
 
             // AAAAAA PROPAGATION STUFFF
             Dictionary<int, List<ILightWithId>> lightsPreGroup = new();
-            TrackLaneRingsManager[] managers = Object.FindObjectsOfType<TrackLaneRingsManager>();
+            TrackLaneRingsManager[] managers = Object.FindObjectsByType<TrackLaneRingsManager>(FindObjectsSortMode.InstanceID);
             foreach (ILightWithId light in Lights)
             {
                 if (light is not MonoBehaviour monoBehaviour)

@@ -30,7 +30,9 @@ internal class LightWithIdRegisterer : IAffinity
         ILightWithId[] lights = _lightWithIdManager._oldMapping[lightId].lightInstances ?? [];
         int index = Array.IndexOf(lights, lightWithId);
         if (index < 0)
+        {
             return;
+        }
 
         lights[index] = null!;
         _tableManager.UnregisterIndex(lightId, index);
@@ -63,16 +65,22 @@ internal class LightWithIdRegisterer : IAffinity
     private void Postfix(LightWithIdManager __instance, ILightWithId lightWithId)
     {
         if (__instance.gameObject.scene.name.Contains("Menu") || !lightWithId.isRegistered)
+        {
             return;
+        }
 
         int lightId = lightWithId.lightId;
         if (lightId < 0 || lightId >= __instance._oldMapping.Length)
+        {
             return;
+        }
 
         ILightWithId[] lights = __instance._oldMapping[lightId].lightInstances ?? [];
         int index = Array.IndexOf(lights, lightWithId);
         if (index < 0)
+        {
             return;
+        }
 
         if (_needToRegister.Remove(lightWithId))
         {

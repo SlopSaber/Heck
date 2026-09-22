@@ -61,8 +61,7 @@ internal class NoteEffectsColorize : IAffinity
         typeof(ColorManager),
         nameof(ColorManager.ColorForType),
         AffinityMethodType.Normal,
-        null,
-        typeof(ColorType))]
+        new[] { typeof(ColorType) })]
     private bool UseChromaColor(ref Color __result)
     {
         Color? color = _noteColorOverride;

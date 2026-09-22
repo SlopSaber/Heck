@@ -128,63 +128,6 @@ internal class MaterialsManager : IDisposable
         return CreateMaterialInfo(shaderType, color, shaderKeywords, track);
     }
 
-    private MaterialInfo CreateMaterialInfo(
-        ShaderType shaderType,
-        Color? color,
-        string[]? shaderKeywords,
-        List<Track>? track)
-    {
-        Material originalMaterial = shaderType switch
-        {
-            ShaderType.Standard => _standardMaterial,
-            ShaderType.OpaqueLight => _opaqueLightMaterial,
-            ShaderType.TransparentLight => _transparentLightMaterial,
-#if !PRE_V1_37_1
-            ShaderType.BaseWater => _baseWaterMaterial ??= InstantiateMaterialFromShader(
-                ShaderType.BaseWater,
-                _environmentMaterialsManager.WaterLit),
-#else
-            ShaderType.BaseWater => _baseWaterMaterial,
-#endif
-            ShaderType.Glowing => _glowingMaterial,
-            _ => _environmentMaterialsManager.EnvironmentMaterials.TryGetValue(shaderType, out Material foundMat)
-                ? foundMat
-                : throw new InvalidOperationException()
-        };
-
-#if !PRE_V1_40_8
-        // credit to @Provini for the idea of using Custom/Glowing
-        // https://github.com/Aeroluna/Heck/issues/125#issuecomment-2661311783
-        // stupid janky fix to the fact that they changed simplelit shader in 1.38
-        if (shaderType is ShaderType.Standard or ShaderType.BTSPillar && shaderKeywords is { Length: 0 })
-        {
-            shaderKeywords = null;
-            color = color?.ColorWithAlpha(0);
-            originalMaterial = _glowingMaterial;
-        }
-#endif
-
-        Material material = Object.Instantiate(originalMaterial);
-        _createdMaterials.Add(material);
-        if (color != null)
-        {
-            material.color = color.Value;
-        }
-
-        if (shaderKeywords != null)
-        {
-            material.shaderKeywords = shaderKeywords;
-        }
-
-        MaterialInfo materialInfo = new(shaderType, material, track);
-        if (track != null)
-        {
-            _materialColorAnimator.Value.Add(materialInfo);
-        }
-
-        return materialInfo;
-    }
-
     private static Material InstantiateSharedMaterial(ShaderType shaderType)
     {
         string shaderName = shaderType switch
@@ -267,5 +210,62 @@ internal class MaterialsManager : IDisposable
         }
 
         return material;
+    }
+
+    private MaterialInfo CreateMaterialInfo(
+        ShaderType shaderType,
+        Color? color,
+        string[]? shaderKeywords,
+        List<Track>? track)
+    {
+        Material originalMaterial = shaderType switch
+        {
+            ShaderType.Standard => _standardMaterial,
+            ShaderType.OpaqueLight => _opaqueLightMaterial,
+            ShaderType.TransparentLight => _transparentLightMaterial,
+#if !PRE_V1_37_1
+            ShaderType.BaseWater => _baseWaterMaterial ??= InstantiateMaterialFromShader(
+                ShaderType.BaseWater,
+                _environmentMaterialsManager.WaterLit),
+#else
+            ShaderType.BaseWater => _baseWaterMaterial,
+#endif
+            ShaderType.Glowing => _glowingMaterial,
+            _ => _environmentMaterialsManager.EnvironmentMaterials.TryGetValue(shaderType, out Material foundMat)
+                ? foundMat
+                : throw new InvalidOperationException()
+        };
+
+#if !PRE_V1_40_8
+        // credit to @Provini for the idea of using Custom/Glowing
+        // https://github.com/Aeroluna/Heck/issues/125#issuecomment-2661311783
+        // stupid janky fix to the fact that they changed simplelit shader in 1.38
+        if (shaderType is ShaderType.Standard or ShaderType.BTSPillar && shaderKeywords is { Length: 0 })
+        {
+            shaderKeywords = null;
+            color = color?.ColorWithAlpha(0);
+            originalMaterial = _glowingMaterial;
+        }
+#endif
+
+        Material material = Object.Instantiate(originalMaterial);
+        _createdMaterials.Add(material);
+        if (color != null)
+        {
+            material.color = color.Value;
+        }
+
+        if (shaderKeywords != null)
+        {
+            material.shaderKeywords = shaderKeywords;
+        }
+
+        MaterialInfo materialInfo = new(shaderType, material, track);
+        if (track != null)
+        {
+            _materialColorAnimator.Value.Add(materialInfo);
+        }
+
+        return materialInfo;
     }
 }

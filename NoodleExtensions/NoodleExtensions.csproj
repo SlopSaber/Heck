@@ -36,7 +36,7 @@
     <Reference Include="BGNet" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGNet.dll" Condition="Exists('$(BeatSaberDir)\Beat Saber_Data\Managed\BGNet.dll')"/>
     <Reference Include="BGNetCore" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGNetCore.dll"/>
     <Reference Include="Core" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Core.dll"/>
-    <Reference Include="CustomJSONData" HintPath="..\..\CustomJSONData\CustomJSONData\bin\Release\net48\CustomJSONData.dll"/>
+    <Reference Include="CustomJSONData" HintPath="$(BeatSaberDir)\Plugins\CustomJSONData.dll"/>
     <Reference Include="DataModels" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\DataModels.dll" Publicize="true"/>
     <Reference Include="GameplayCore" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\GameplayCore.dll"/>
     <Reference Include="HMLib" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\HMLib.dll"/>

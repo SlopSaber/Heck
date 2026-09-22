@@ -39,7 +39,7 @@
     <Reference Include="BeatSaber.Haptics" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.Haptics.dll"/>
     <Reference Include="BSML" HintPath="$(BeatSaberDir)\Plugins\BSML.dll"/>
     <Reference Include="Colors" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Colors.dll" Publicize="true"/>
-    <Reference Include="CustomJSONData" HintPath="..\..\CustomJSONData\CustomJSONData\bin\Release\net48\CustomJSONData.dll"/>
+    <Reference Include="CustomJSONData" HintPath="$(BeatSaberDir)\Plugins\CustomJSONData.dll"/>
     <Reference Include="DataModels" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\DataModels.dll" Publicize="true"/>
     <Reference Include="GameplayCore" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\GameplayCore.dll"/>
     <Reference Include="HMLib" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\HMLib.dll"/>

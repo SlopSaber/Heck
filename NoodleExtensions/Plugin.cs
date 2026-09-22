@@ -22,7 +22,8 @@ internal class Plugin
 
         zenjector.Install<NoodleAppInstaller>(Location.App);
         zenjector.Install<NoodlePlayerInstaller>(Location.Player);
-        zenjector.Expose<NoteCutCoreEffectsSpawner>("Gameplay");
+        zenjector.Expose<NoteCutCoreEffectsSpawner>(condition: (context, _) =>
+            context is Zenject.SceneDecoratorContext decorator && decorator.DecoratedContractName == "Gameplay");
         zenjector.UseLogger(pluginLogger);
 
         HeckPatchManager.Register(HARMONY_ID);

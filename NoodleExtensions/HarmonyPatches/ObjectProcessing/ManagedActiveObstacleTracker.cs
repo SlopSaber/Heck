@@ -18,8 +18,7 @@ internal class ManagedActiveObstacleTracker : IAffinity
         typeof(BasicBeatmapObjectManager),
         "DespawnInternal",
         AffinityMethodType.Normal,
-        null,
-        typeof(ObstacleController))]
+        new[] { typeof(ObstacleController) })]
     private void RemoveFromManagedList(ObstacleController obstacleController)
     {
         _activeObstacles.Remove(obstacleController);

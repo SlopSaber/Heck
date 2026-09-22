@@ -97,8 +97,7 @@ internal class ReplaceMovementDataProvider : IAffinity
         typeof(BasicBeatmapObjectManager),
         nameof(BasicBeatmapObjectManager.DespawnInternal),
         AffinityMethodType.Normal,
-        null,
-        typeof(ObstacleController))]
+        new[] { typeof(ObstacleController) })]
     private void DespawnObstacleMovement(ObstacleController obstacleController)
     {
         if (obstacleController._variableMovementDataProvider is NoodleMovementDataProvider noodleMovementDataProvider)
@@ -112,8 +111,7 @@ internal class ReplaceMovementDataProvider : IAffinity
         typeof(BasicBeatmapObjectManager),
         nameof(BasicBeatmapObjectManager.DespawnInternal),
         AffinityMethodType.Normal,
-        null,
-        typeof(NoteController))]
+        new[] { typeof(NoteController) })]
     private void DespawnNoteMovement(NoteController noteController)
     {
         if (noteController._noteMovement._variableMovementDataProvider is NoodleMovementDataProvider noodleMovementDataProvider)
@@ -127,8 +125,7 @@ internal class ReplaceMovementDataProvider : IAffinity
         typeof(BasicBeatmapObjectManager),
         nameof(BasicBeatmapObjectManager.DespawnInternal),
         AffinityMethodType.Normal,
-        null,
-        typeof(SliderController))]
+        new[] { typeof(SliderController) })]
     private void DespawnSliderMovement(SliderController sliderNoteController)
     {
         if (sliderNoteController._sliderMovement._variableMovementDataProvider is NoodleMovementDataProvider noodleMovementDataProvider)

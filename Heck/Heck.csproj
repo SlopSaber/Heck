@@ -1,6 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <ImportBSMTTargets>true</ImportBSMTTargets>
+    <BSMTProjectType>BSIPA</BSMTProjectType>
+    <GameDirectory Condition="!$(Configuration.EndsWith('1.45.1')) AND '$(GameDirectory)' == ''">$(BeatSaberDir)</GameDirectory>
+    <GameDirectory Condition="$(Configuration.EndsWith('1.45.1'))">D:\BSManager\BSInstances\1.45.1</GameDirectory>
+    <CopyPDB>false</CopyPDB>
+    <DisableCopyToGame Condition="$(Configuration.EndsWith('1.45.1'))">false</DisableCopyToGame>
     <TargetFramework>net48</TargetFramework>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
@@ -27,55 +33,55 @@
     <Reference Private="False" />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Reference Include="0Harmony" HintPath="$(BeatSaberDir)\Libs\0Harmony.dll" />
-    <Reference Include="AdditionalContentModel.Interfaces" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\AdditionalContentModel.Interfaces.dll" />
-    <Reference Include="BeatmapCore" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BeatmapCore.dll" Publicize="true" />
+    <Reference Include="0Harmony" HintPath="$(GameDirectory)\Libs\0Harmony.dll" />
+    <Reference Include="AdditionalContentModel.Interfaces" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\AdditionalContentModel.Interfaces.dll" />
+    <Reference Include="BeatmapCore" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BeatmapCore.dll" Publicize="true" />
     <Reference Include="BeatSaber.GameSettings">
-      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.GameSettings.dll</HintPath>
+      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.GameSettings.dll</HintPath>
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
       <Publicize>true</Publicize>
     </Reference>
-    <Reference Include="BeatSaber.Multiplayer.Core" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.Multiplayer.Core.dll" />
-    <Reference Include="BeatSaber.PerformancePresets" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.PerformancePresets.dll" Condition="Exists('$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.PerformancePresets.dll')" />
-    <Reference Include="BeatSaber.Settings" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.Settings.dll" />
+    <Reference Include="BeatSaber.Multiplayer.Core" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.Multiplayer.Core.dll" />
+    <Reference Include="BeatSaber.PerformancePresets" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.PerformancePresets.dll" Condition="Exists('$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.PerformancePresets.dll')" />
+    <Reference Include="BeatSaber.Settings" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.Settings.dll" />
     <Reference Include="BeatSaber.ViewSystem">
-      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatSaber.ViewSystem.dll</HintPath>
+      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\BeatSaber.ViewSystem.dll</HintPath>
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
       <Publicize>true</Publicize>
     </Reference>
-    <Reference Include="BeatSaberMarkupLanguage" HintPath="$(BeatSaberDir)\Plugins\BSML.dll" />
-    <Reference Include="BGLib.AppFlow" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGLib.AppFlow.dll" />
-    <Reference Include="BGLib.DotnetExtension" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGLib.DotnetExtension.dll" />
-    <Reference Include="BGLib.JsonExtension" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGLib.JsonExtension.dll" />
-    <Reference Include="BGLib.SaveDataCore" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGLib.SaveDataCore.dll" />
-    <Reference Include="BGLib.UnityExtension" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGLib.UnityExtension.dll" />
-    <Reference Include="BGNet" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGNet.dll" Condition="Exists('$(BeatSaberDir)\Beat Saber_Data\Managed\BGNet.dll')" />
-    <Reference Include="BGNetCore" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\BGNetCore.dll" />
-    <Reference Include="Colors" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Colors.dll" />
-    <Reference Include="CustomJSONData" HintPath="$(BeatSaberDir)\Plugins\CustomJSONData.dll" />
+    <Reference Include="BeatSaberMarkupLanguage" HintPath="$(GameDirectory)\Plugins\BSML.dll" />
+    <Reference Include="BGLib.AppFlow" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BGLib.AppFlow.dll" />
+    <Reference Include="BGLib.DotnetExtension" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BGLib.DotnetExtension.dll" />
+    <Reference Include="BGLib.JsonExtension" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BGLib.JsonExtension.dll" />
+    <Reference Include="BGLib.SaveDataCore" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BGLib.SaveDataCore.dll" />
+    <Reference Include="BGLib.UnityExtension" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BGLib.UnityExtension.dll" />
+    <Reference Include="BGNet" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BGNet.dll" Condition="Exists('$(GameDirectory)\Beat Saber_Data\Managed\BGNet.dll')" />
+    <Reference Include="BGNetCore" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\BGNetCore.dll" />
+    <Reference Include="Colors" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\Colors.dll" />
+    <Reference Include="CustomJSONData" HintPath="$(GameDirectory)\Plugins\CustomJSONData.dll" />
     <Reference Include="DataModels">
-      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\DataModels.dll</HintPath>
+      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\DataModels.dll</HintPath>
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
       <Publicize>true</Publicize>
     </Reference>
-    <Reference Include="GameplayCore" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\GameplayCore.dll" />
-    <Reference Include="HMLib" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\HMLib.dll" />
-    <Reference Include="HMUI" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\HMUI.dll" Publicize="true" />
-    <Reference Include="IPA.Loader" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\IPA.Loader.dll" />
-    <Reference Include="Main" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Main.dll" Publicize="true" />
-    <Reference Include="MediaLoader" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\MediaLoader.dll" />
-    <Reference Include="MonoMod.Utils" HintPath="$(BeatSaberDir)\Libs\MonoMod.Utils.dll" />
-    <Reference Include="Newtonsoft.Json" HintPath="$(BeatSaberDir)\Libs\Newtonsoft.Json.dll" />
-    <Reference Include="SiraUtil" HintPath="$(BeatSaberDir)\Plugins\SiraUtil.dll" Publicize="true" />
-    <Reference Include="UnityEngine.AudioModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.AudioModule.dll" />
-    <Reference Include="UnityEngine.CoreModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll" />
-    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.InputLegacyModule.dll" />
-    <Reference Include="UnityEngine.UI" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UI.dll" />
-    <Reference Include="Zenject" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Zenject.dll" Publicize="true" />
-    <Reference Include="Zenject-usage" HintPath="$(BeatSaberDir)\Beat Saber_Data\Managed\Zenject-usage.dll" />
+    <Reference Include="GameplayCore" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\GameplayCore.dll" />
+    <Reference Include="HMLib" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\HMLib.dll" />
+    <Reference Include="HMUI" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\HMUI.dll" Publicize="true" />
+    <Reference Include="IPA.Loader" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\IPA.Loader.dll" />
+    <Reference Include="Main" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\Main.dll" Publicize="true" />
+    <Reference Include="MediaLoader" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\MediaLoader.dll" />
+    <Reference Include="MonoMod.Utils" HintPath="$(GameDirectory)\Libs\MonoMod.Utils.dll" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(GameDirectory)\Libs\Newtonsoft.Json.dll" />
+    <Reference Include="SiraUtil" HintPath="$(GameDirectory)\Plugins\SiraUtil.dll" Publicize="true" />
+    <Reference Include="UnityEngine.AudioModule" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\UnityEngine.AudioModule.dll" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll" />
+    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\UnityEngine.InputLegacyModule.dll" />
+    <Reference Include="UnityEngine.UI" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\UnityEngine.UI.dll" />
+    <Reference Include="Zenject" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\Zenject.dll" Publicize="true" />
+    <Reference Include="Zenject-usage" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\Zenject-usage.dll" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SettingsSetter\SettableSettingsContent.bsml" />

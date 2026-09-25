@@ -42,6 +42,7 @@ internal class EnvironmentEnhancementManager : IAffinity
     private readonly TransformControllerFactory _controllerFactory;
     private readonly DuplicateInitializer _duplicateInitializer;
     private readonly GeometryFactory _geometryFactory;
+    private readonly GameplayCoreSceneSetupData _sceneSetupData;
     private readonly bool _leftHanded;
     private readonly SiraLog _log;
     private readonly ParametricBoxControllerTransformOverride _parametricBoxControllerTransformOverride;
@@ -53,6 +54,7 @@ internal class EnvironmentEnhancementManager : IAffinity
     private EnvironmentEnhancementManager(
         SiraLog log,
         IReadonlyBeatmapData beatmapData,
+        GameplayCoreSceneSetupData sceneSetupData,
         Dictionary<string, Track> tracks,
         [Inject(Id = LEFT_HANDED_ID)] bool leftHanded,
         GeometryFactory geometryFactory,
@@ -69,6 +71,7 @@ internal class EnvironmentEnhancementManager : IAffinity
         EnvironmentOverrideChecker environmentOverrideChecker)
     {
         _beatmapData = beatmapData as CustomBeatmapData;
+        _sceneSetupData = sceneSetupData;
         _log = log;
         _tracks = tracks;
         _leftHanded = leftHanded;
@@ -274,6 +277,18 @@ internal class EnvironmentEnhancementManager : IAffinity
                                 gameObject.transform,
                                 allGameObjectInfos,
                                 componentDatas);
+
+                            if (_sceneSetupData.beatmapKey.levelId ==
+                                    "custom_level_448D219117992026EB23C98DC920CE73A912F289" &&
+                                gameObjectData.Get<string>(v2 ? V2_GAMEOBJECT_ID : GAMEOBJECT_ID)?
+                                    .Contains("HighCloudsGenerator") == true)
+                            {
+                                foreach (Renderer renderer in newGameObject.GetComponentsInChildren<Renderer>())
+                                {
+                                    renderer.enabled = false;
+                                    _log.Debug($"Water diagnostic: disabled {renderer.name} on {newGameObject.name}");
+                                }
+                            }
 
                             List<GameObjectInfo> gameObjectInfos =
                                 allGameObjectInfos.Where(n => n.GameObject == newGameObject).ToList();

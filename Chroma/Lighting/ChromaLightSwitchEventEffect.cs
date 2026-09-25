@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Chroma.Colorizer;
 using Chroma.Extras;
 using Chroma.Modules;
@@ -48,6 +49,8 @@ public sealed class ChromaLightSwitchEventEffect : IDisposable
     private readonly SongTimeTweeningManager _tweeningManager;
 
     private bool _usingBoostColors;
+    private bool _loggedFirstColorEvent;
+    private bool _loggedLaterColorEvent;
 
     [UsedImplicitly]
     private ChromaLightSwitchEventEffect(
@@ -507,6 +510,22 @@ public sealed class ChromaLightSwitchEventEffect : IDisposable
                 easing = chromaData.Easing;
                 lerpType = chromaData.LerpType;
             }
+        }
+
+        if ((!_loggedFirstColorEvent || (!_loggedLaterColorEvent && beatmapEventData.time >= 90f)) &&
+            _deserializedData.Resolve(beatmapEventData, out ChromaEventData? diagnosticData) &&
+            diagnosticData?.ColorData.HasValue == true)
+        {
+            if (beatmapEventData.time >= 90f)
+            {
+                _loggedLaterColorEvent = true;
+            }
+            else
+            {
+                _loggedFirstColorEvent = true;
+            }
+
+            _log.Debug($"Light event: type={EventType}, time={beatmapEventData.time:F3}s, lightID={diagnosticData.LightID}, selected={selectLights?.Count() ?? -1}, originalLights={Colorizer.Lights.Count}, registeredTweens={ColorTweens.Count}, color={diagnosticData.ColorData.Value}");
         }
 
         // Particle colorizer cant use BeatmapObjectCallbackController event because the LightSwitchEventEffect must activate first

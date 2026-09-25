@@ -31,6 +31,24 @@ public class LightColorizerManager
 
     public Color?[] GlobalColor { get; } = new Color?[COLOR_FIELDS];
 
+    [PublicAPI]
+    public void ResetForReplaySeek()
+    {
+        foreach (LightColorizer colorizer in Colorizers.Values)
+        {
+            colorizer.ChromaLightSwitchEventEffect.ResetForReplaySeek();
+        }
+    }
+
+    [PublicAPI]
+    public void FinishReplaySeek(float songTime)
+    {
+        foreach (LightColorizer colorizer in Colorizers.Values)
+        {
+            colorizer.ChromaLightSwitchEventEffect.FinishReplaySeek(songTime);
+        }
+    }
+
     public void Colorize(BasicBeatmapEventType eventType, bool refresh, params Color?[] colors)
     {
         GetColorizer(eventType).Colorize(refresh, colors);

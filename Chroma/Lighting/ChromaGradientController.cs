@@ -48,6 +48,11 @@ internal class ChromaGradientController : ITickable
         _reusableEventTypes.Clear();
     }
 
+    internal void ResetForReplaySeek()
+    {
+        Gradients.Clear();
+    }
+
     internal Color AddGradient(ChromaEventData.GradientObjectData gradientObject, BasicBeatmapEventType id, float time)
     {
         CancelGradient(id);

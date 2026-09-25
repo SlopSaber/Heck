@@ -406,6 +406,53 @@ public sealed class ChromaLightSwitchEventEffect : IDisposable
         DidRefresh?.Invoke();
     }
 
+    internal void ResetForReplaySeek()
+    {
+        _gradientController?.ResetForReplaySeek();
+        _usingBoostColors = false;
+        Colorizer.Colorize(false, null, null, null, null);
+
+        Color color = GetNormalColor(0);
+        if (!_lightOnStart)
+        {
+            color = color.ColorWithAlpha(_offColorIntensity);
+        }
+
+        foreach (ChromaIDColorTween tween in ColorTweens.Values)
+        {
+            tween.Kill();
+            tween.PreviousEvent = null;
+            tween.fromValue = color;
+            tween.toValue = color;
+            tween.SetColor(color);
+        }
+    }
+
+    internal void FinishReplaySeek(float songTime)
+    {
+        foreach (ChromaIDColorTween tween in ColorTweens.Values)
+        {
+            BasicBeatmapEventData? previousEvent = tween.PreviousEvent;
+            if (previousEvent == null || tween.isKilled || tween.duration <= 0f)
+            {
+                continue;
+            }
+
+            int value = previousEvent.value;
+            if (value is 2 or 6 or 10 or 3 or 7 or 11 or -1)
+            {
+                tween.SetStartTimeAndEndTime(previousEvent.time, previousEvent.time + tween.duration);
+            }
+
+            float progress = Mathf.Clamp01((songTime - tween.startTime) / tween.duration);
+            tween.SetColor(tween.GetValue(progress));
+            if (progress >= 1f)
+            {
+                tween.Kill();
+            }
+        }
+    }
+
     internal void RegisterLight(ILightWithId lightWithId, int id)
     {
         if (!ColorTweens.ContainsKey(lightWithId))

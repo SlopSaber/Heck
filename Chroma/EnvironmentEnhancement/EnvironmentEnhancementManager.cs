@@ -390,6 +390,39 @@ internal class EnvironmentEnhancementManager : IAffinity
         }
 
         _log.Debug($"Environment enhancements: {processedCount} entries, {failedCount} failures, {allGameObjectInfos.Count - initialObjectCount} added objects");
+
+        yield return new WaitForSecondsRealtime(1f);
+        Camera? mainCamera = Camera.main;
+        if (mainCamera != null)
+        {
+            int activeRenderers = 0;
+            int nearRenderers = 0;
+            float nearestDistance = float.MaxValue;
+            string nearestRenderer = "none";
+            foreach (GameObjectInfo info in allGameObjectInfos)
+            {
+                Renderer? renderer = info.GameObject.GetComponent<Renderer>();
+                if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
+                activeRenderers++;
+                float distance = Vector3.Distance(mainCamera.transform.position, renderer.bounds.center);
+                if (distance < 100f)
+                {
+                    nearRenderers++;
+                }
+
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearestRenderer = $"{renderer.name} at {renderer.bounds.center}, shader={renderer.sharedMaterial?.shader?.name}";
+                }
+            }
+
+            _log.Debug($"Scene renderers: camera={mainCamera.transform.position}, active={activeRenderers}, within100m={nearRenderers}, nearest={nearestRenderer}, distance={nearestDistance:F1}m");
+        }
     }
 
     private List<GameObjectInfo> GetAllGameObjects()

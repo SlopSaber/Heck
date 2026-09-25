@@ -5,6 +5,7 @@ using Heck.Animation;
 using Heck.Deserialize;
 using Heck.Event;
 using JetBrains.Annotations;
+using SiraUtil.Logging;
 using UnityEngine;
 using Zenject;
 using static Chroma.ChromaController;
@@ -17,17 +18,23 @@ internal class FogAnimatorV2 : ITickable, IDisposable, ICustomEvent
 {
     private readonly BloomFogSO _bloomFog;
     private readonly DeserializedData _deserializedData;
+    private readonly SiraLog _log;
 
     private readonly BloomFogEnvironmentParams _transitionFogParams;
     private Track? _track;
+    private bool _loggedFirstTick;
 
     [UsedImplicitly]
     private FogAnimatorV2(
+        SiraLog log,
         BloomFogSO bloomFog,
         [Inject(Id = ID)] DeserializedData deserializedData)
     {
+        _log = log;
         _bloomFog = bloomFog;
         _deserializedData = deserializedData;
+
+        _log.Debug($"Fog animator initialized: enabled={bloomFog.bloomFogEnabled}, default attenuation={bloomFog.defaultForParams.attenuation}");
 
         _transitionFogParams = ScriptableObject.CreateInstance<BloomFogEnvironmentParams>();
         BloomFogEnvironmentParams defaultParams = bloomFog.defaultForParams;
@@ -43,6 +50,7 @@ internal class FogAnimatorV2 : ITickable, IDisposable, ICustomEvent
         if (_deserializedData.Resolve(customEventData, out ChromaAssignFogEventData? chromaData))
         {
             _track = chromaData.Track;
+            _log.Debug($"Fog track assigned at {customEventData.time:F3}s");
         }
     }
 
@@ -85,5 +93,10 @@ internal class FogAnimatorV2 : ITickable, IDisposable, ICustomEvent
         }
 
         _bloomFog._transition = 1;
+        if (!_loggedFirstTick)
+        {
+            _loggedFirstTick = true;
+            _log.Debug($"Fog first tick: enabled={_bloomFog.bloomFogEnabled}, keyword={Shader.IsKeywordEnabled("ENABLE_BLOOM_FOG")}, attenuation={_transitionFogParams.attenuation}, offset={_transitionFogParams.offset}, startY={_transitionFogParams.heightFogStartY}, height={_transitionFogParams.heightFogHeight}");
+        }
     }
 }

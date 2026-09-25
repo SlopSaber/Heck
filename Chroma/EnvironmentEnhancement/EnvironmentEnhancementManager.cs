@@ -154,6 +154,9 @@ internal class EnvironmentEnhancementManager : IAffinity
         }
 
         List<GameObjectInfo> allGameObjectInfos = GetAllGameObjects();
+        int initialObjectCount = allGameObjectInfos.Count;
+        int processedCount = 0;
+        int failedCount = 0;
 
         if (_config.PrintEnvironmentEnhancementDebug)
         {
@@ -164,6 +167,7 @@ internal class EnvironmentEnhancementManager : IAffinity
 
         foreach (CustomData gameObjectData in environmentData)
         {
+            processedCount++;
             try
             {
                 int? dupeAmount = gameObjectData.Get<int?>(v2 ? V2_DUPLICATION_AMOUNT : DUPLICATION_AMOUNT);
@@ -374,6 +378,7 @@ internal class EnvironmentEnhancementManager : IAffinity
             }
             catch (Exception e)
             {
+                failedCount++;
                 _log.Error($"Error processing environment data for: {gameObjectData}");
                 _log.Error(e);
             }
@@ -383,6 +388,8 @@ internal class EnvironmentEnhancementManager : IAffinity
                 _log.Debug("=====================================");
             }
         }
+
+        _log.Debug($"Environment enhancements: {processedCount} entries, {failedCount} failures, {allGameObjectInfos.Count - initialObjectCount} added objects");
     }
 
     private List<GameObjectInfo> GetAllGameObjects()

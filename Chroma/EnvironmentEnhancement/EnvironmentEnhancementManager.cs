@@ -154,9 +154,6 @@ internal class EnvironmentEnhancementManager : IAffinity
         }
 
         List<GameObjectInfo> allGameObjectInfos = GetAllGameObjects();
-        int initialObjectCount = allGameObjectInfos.Count;
-        int processedCount = 0;
-        int failedCount = 0;
 
         if (_config.PrintEnvironmentEnhancementDebug)
         {
@@ -167,7 +164,6 @@ internal class EnvironmentEnhancementManager : IAffinity
 
         foreach (CustomData gameObjectData in environmentData)
         {
-            processedCount++;
             try
             {
                 int? dupeAmount = gameObjectData.Get<int?>(v2 ? V2_DUPLICATION_AMOUNT : DUPLICATION_AMOUNT);
@@ -378,7 +374,6 @@ internal class EnvironmentEnhancementManager : IAffinity
             }
             catch (Exception e)
             {
-                failedCount++;
                 _log.Error($"Error processing environment data for: {gameObjectData}");
                 _log.Error(e);
             }
@@ -387,41 +382,6 @@ internal class EnvironmentEnhancementManager : IAffinity
             {
                 _log.Debug("=====================================");
             }
-        }
-
-        _log.Debug($"Environment enhancements: {processedCount} entries, {failedCount} failures, {allGameObjectInfos.Count - initialObjectCount} added objects");
-
-        yield return new WaitForSecondsRealtime(1f);
-        Camera? mainCamera = Camera.main;
-        if (mainCamera != null)
-        {
-            int activeRenderers = 0;
-            int nearRenderers = 0;
-            float nearestDistance = float.MaxValue;
-            string nearestRenderer = "none";
-            foreach (GameObjectInfo info in allGameObjectInfos)
-            {
-                Renderer? renderer = info.GameObject.GetComponent<Renderer>();
-                if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy)
-                {
-                    continue;
-                }
-
-                activeRenderers++;
-                float distance = Vector3.Distance(mainCamera.transform.position, renderer.bounds.center);
-                if (distance < 100f)
-                {
-                    nearRenderers++;
-                }
-
-                if (distance < nearestDistance)
-                {
-                    nearestDistance = distance;
-                    nearestRenderer = $"{renderer.name} at {renderer.bounds.center}, shader={renderer.sharedMaterial?.shader?.name}";
-                }
-            }
-
-            _log.Debug($"Scene renderers: camera={mainCamera.transform.position}, active={activeRenderers}, within100m={nearRenderers}, nearest={nearestRenderer}, distance={nearestDistance:F1}m");
         }
     }
 

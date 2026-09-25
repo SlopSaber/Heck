@@ -59,6 +59,8 @@ public class ObstacleColorizer : ObjectColorizer
 
     private readonly ParametricBoxFrameController _obstacleFrame;
 
+    private bool _needsInitRefresh;
+
     private ObstacleColorizer(
         ObstacleControllerBase obstacleController,
         ObstacleColorizerManager manager,
@@ -77,13 +79,20 @@ public class ObstacleColorizer : ObjectColorizer
 
     protected override Color? GlobalColorGetter => _manager.GlobalColor;
 
+    internal void InvalidateAfterInit()
+    {
+        _needsInitRefresh = true;
+    }
+
     internal override void Refresh()
     {
         Color color = Color;
-        if (color == _obstacleFrame.color)
+        if (!_needsInitRefresh && color == _obstacleFrame.color)
         {
             return;
         }
+
+        _needsInitRefresh = false;
 
         _obstacleFrame.color = color;
         _obstacleFrame.Refresh();

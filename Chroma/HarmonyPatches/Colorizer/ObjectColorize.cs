@@ -31,6 +31,7 @@ internal class ObjectColorize : IAffinity
     {
         if (_deserializedData.Resolve(obstacleData, out ChromaObjectData? chromaData))
         {
+            _obstacleManager.GetColorizer(__instance).InvalidateAfterInit();
             _obstacleManager.Colorize(__instance, chromaData.Color);
         }
     }

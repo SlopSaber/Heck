@@ -172,8 +172,10 @@ public class LightColorizer
         _reusablePropagationLightsList = []; // This prevents a significant amount of allocation.
 
     private readonly LightIDTableManager _tableManager;
+    private readonly LightWithIdManager _lightManager;
 
     private ILightWithId[][]? _lightsPropagationGrouped;
+    private IReadOnlyList<ILightWithId>? _lightsPropagationSource;
 
     private LightColorizer(
         ChromaLightSwitchEventEffect chromaLightSwitchEventEffect,
@@ -184,6 +186,7 @@ public class LightColorizer
         ChromaLightSwitchEventEffect = chromaLightSwitchEventEffect;
         _colorizerManager = colorizerManager;
         _tableManager = tableManager;
+        _lightManager = lightManager;
 
         _lightId = chromaLightSwitchEventEffect.LightsID;
 
@@ -193,11 +196,6 @@ public class LightColorizer
         Initialize(lightSwitchEventEffect._lightColor0Boost, 2);
         Initialize(lightSwitchEventEffect._lightColor1Boost, 3);
 
-        ILightWithId[] lights = lightSwitchEventEffect.lightsId < lightManager._oldMapping.Length
-            ? lightManager._oldMapping[lightSwitchEventEffect.lightsId].lightInstances ?? []
-            : [];
-
-        Lights = lights;
         return;
 
         void Initialize(ColorSO colorSO, int index)
@@ -226,21 +224,26 @@ public class LightColorizer
         }
     }
 
-    public IReadOnlyList<ILightWithId> Lights { get; }
+    public IReadOnlyList<ILightWithId> Lights => _lightId >= 0 && _lightId < _lightManager._oldMapping.Length
+        ? _lightManager._oldMapping[_lightId]?.lightInstances ?? []
+        : [];
 
     public ILightWithId[][] LightsPropagationGrouped
     {
         get
         {
-            if (_lightsPropagationGrouped != null)
+            IReadOnlyList<ILightWithId> lights = Lights;
+            if (_lightsPropagationGrouped != null && ReferenceEquals(_lightsPropagationSource, lights))
             {
                 return _lightsPropagationGrouped;
             }
 
+            _lightsPropagationSource = lights;
+
             // AAAAAA PROPAGATION STUFFF
             Dictionary<int, List<ILightWithId>> lightsPreGroup = new();
             TrackLaneRingsManager[] managers = Object.FindObjectsByType<TrackLaneRingsManager>(FindObjectsSortMode.InstanceID);
-            foreach (ILightWithId light in Lights)
+            foreach (ILightWithId light in lights)
             {
                 if (light is not MonoBehaviour monoBehaviour)
                 {
@@ -316,10 +319,11 @@ public class LightColorizer
     public IEnumerable<ILightWithId> GetLightWithIds(IEnumerable<int> ids)
     {
         _reusableLightsList.Clear();
+        IReadOnlyList<ILightWithId> lights = Lights;
         foreach (int id in ids)
         {
             int newId = _tableManager.GetActiveTableValue(_lightId, id) ?? id;
-            ILightWithId? lightWithId = Lights.ElementAtOrDefault(newId);
+            ILightWithId? lightWithId = newId >= 0 && newId < lights.Count ? lights[newId] : null;
             if (lightWithId != null)
             {
                 _reusableLightsList.Add(lightWithId);

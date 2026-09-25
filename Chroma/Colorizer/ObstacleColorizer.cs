@@ -48,7 +48,6 @@ public class ObstacleColorizerManager
 [UsedImplicitly]
 public class ObstacleColorizer : ObjectColorizer
 {
-    private static readonly int _mainColorID = Shader.PropertyToID("_Color");
     private static readonly int _addColorID = Shader.PropertyToID("_AddColor");
     private static readonly int _tintColorID = Shader.PropertyToID("_TintColor");
     private readonly float _addColorMultiplier;
@@ -98,7 +97,6 @@ public class ObstacleColorizer : ObjectColorizer
         value.a = 0f;
         foreach (MaterialPropertyBlockController materialPropertyBlockController in _materialPropertyBlockControllers)
         {
-            materialPropertyBlockController.materialPropertyBlock.SetColor(_mainColorID, color);
             materialPropertyBlockController.materialPropertyBlock.SetColor(_addColorID, value);
             materialPropertyBlockController.materialPropertyBlock.SetColor(
                 _tintColorID,

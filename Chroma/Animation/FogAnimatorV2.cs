@@ -35,6 +35,11 @@ internal class FogAnimatorV2 : ITickable, IDisposable, ICustomEvent
         _transitionFogParams.offset = defaultParams.offset;
         _transitionFogParams.heightFogStartY = defaultParams.heightFogStartY;
         _transitionFogParams.heightFogHeight = defaultParams.heightFogHeight;
+        _transitionFogParams.autoExposureLimit = defaultParams.autoExposureLimit;
+        _transitionFogParams.noteSpawnIntensity = defaultParams.noteSpawnIntensity;
+#if !PRE_V1_37_1
+        _transitionFogParams.legacyAutoExposure = defaultParams.legacyAutoExposure;
+#endif
         bloomFog.transitionFogParams = _transitionFogParams;
     }
 

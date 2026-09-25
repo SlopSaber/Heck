@@ -8,6 +8,7 @@ using Heck.Deserialize;
 using Heck.Event;
 using JetBrains.Annotations;
 using NoodleExtensions.Managers;
+using SiraUtil.Logging;
 using UnityEngine;
 using Zenject;
 using static Heck.HeckController;
@@ -39,6 +40,8 @@ internal class PlayerTrack : MonoBehaviour
     private TransformController? _transformController;
     private TransformControllerFactory _transformFactory = null!;
     private bool _v2;
+    private SiraLog _log = null!;
+    private bool _loggedPosition;
 
     internal void AssignTrack(
         Track track)
@@ -60,6 +63,7 @@ internal class PlayerTrack : MonoBehaviour
     [UsedImplicitly]
     [Inject]
     private void Construct(
+        SiraLog log,
         IReadonlyBeatmapData beatmapData,
         [Inject(Id = LEFT_HANDED_ID)] bool leftHanded,
         TransformControllerFactory transformControllerFactory,
@@ -70,6 +74,7 @@ internal class PlayerTrack : MonoBehaviour
         [InjectOptional] MultiplayerOutroAnimationController? multiOutroController,
         PlayerObject target)
     {
+        _log = log;
         if (pauseController != null)
         {
             pauseController.didPauseEvent += OnDidPauseEvent;
@@ -102,6 +107,7 @@ internal class PlayerTrack : MonoBehaviour
 
         // v3 uses an underlying TransformController
         _v2 = ((CustomBeatmapData)beatmapData).version.IsVersion2();
+        _log.Debug($"Player track created: target={target}, v2={_v2}, parent={transform.parent?.name}");
         if (!_v2)
         {
             enabled = false;
@@ -225,6 +231,11 @@ internal class PlayerTrack : MonoBehaviour
         Transform transform1 = transform;
         transform1.localRotation = worldRotationQuaternion;
         transform1.localPosition = positionVector;
+        if (!_loggedPosition && (positionVector - _startPos).sqrMagnitude > 1f)
+        {
+            _loggedPosition = true;
+            _log.Debug($"Player track moved: target={_target}, local={transform1.localPosition}, world={transform1.position}, camera={Camera.main?.transform.position}, childCount={transform1.childCount}");
+        }
 
         if (_multiPlayersManager != null)
         {
@@ -258,16 +269,19 @@ internal class PlayerTrack : MonoBehaviour
 [CustomEvent(ASSIGN_PLAYER_TO_TRACK)]
 internal class AssignPlayerToTrack : ICustomEvent
 {
+    private readonly SiraLog _log;
     private readonly IInstantiator _instantiator;
     private readonly NoodlePlayerTransformManager _noodlePlayerTransformManager;
     private readonly DeserializedData _deserializedData;
     private readonly Dictionary<PlayerObject, PlayerTrack> _playerTracks = new();
 
     private AssignPlayerToTrack(
+        SiraLog log,
         IInstantiator instantiator,
         NoodlePlayerTransformManager noodlePlayerTransformManager,
         [Inject(Id = ID)] DeserializedData deserializedData)
     {
+        _log = log;
         _instantiator = instantiator;
         _noodlePlayerTransformManager = noodlePlayerTransformManager;
         _deserializedData = deserializedData;
@@ -275,8 +289,10 @@ internal class AssignPlayerToTrack : ICustomEvent
 
     public void Callback(CustomEventData customEventData)
     {
+        _log.Debug($"Assign player to track at {customEventData.time:F3}s");
         if (!_deserializedData.Resolve(customEventData, out NoodlePlayerTrackEventData? noodlePlayerData))
         {
+            _log.Warn("Player track event has no deserialized data");
             return;
         }
 

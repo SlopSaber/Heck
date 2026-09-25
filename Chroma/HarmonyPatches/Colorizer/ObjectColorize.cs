@@ -12,16 +12,19 @@ namespace Chroma.HarmonyPatches.Colorizer;
 internal class ObjectColorize : IAffinity
 {
     private readonly DeserializedData _deserializedData;
+    private readonly GameplayCoreSceneSetupData _sceneSetupData;
     private readonly ObstacleColorizerManager _obstacleManager;
     private readonly SliderColorizerManager _sliderManager;
 
     private ObjectColorize(
         ObstacleColorizerManager obstacleManager,
         SliderColorizerManager sliderManager,
+        GameplayCoreSceneSetupData sceneSetupData,
         [Inject(Id = ChromaController.ID)] DeserializedData deserializedData)
     {
         _obstacleManager = obstacleManager;
         _sliderManager = sliderManager;
+        _sceneSetupData = sceneSetupData;
         _deserializedData = deserializedData;
     }
 
@@ -32,6 +35,19 @@ internal class ObjectColorize : IAffinity
         if (_deserializedData.Resolve(obstacleData, out ChromaObjectData? chromaData))
         {
             _obstacleManager.Colorize(__instance, chromaData.Color);
+
+            Color? color = chromaData.Color;
+            if (_sceneSetupData.beatmapKey.levelId ==
+                    "custom_level_448D219117992026EB23C98DC920CE73A912F289" &&
+                color.HasValue && color.Value.r == 0f && color.Value.g == 1.5f &&
+                color.Value.b == 2f && color.Value.a == 10f)
+            {
+                foreach (Renderer renderer in __instance.GetComponentsInChildren<Renderer>())
+                {
+                    renderer.enabled = false;
+                    Plugin.Log.Debug($"Water wall diagnostic: disabled {renderer.name}");
+                }
+            }
         }
     }
 

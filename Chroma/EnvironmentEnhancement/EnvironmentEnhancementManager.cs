@@ -209,6 +209,16 @@ internal class EnvironmentEnhancementManager : IAffinity
                     }
                     else
                     {
+                        if (active == false)
+                        {
+                            if (_config.PrintEnvironmentEnhancementDebug)
+                            {
+                                _log.Debug($"ID [\"{id}\"] using method [{lookupMethod:G}] is already absent.");
+                            }
+
+                            continue;
+                        }
+
                         throw new InvalidOperationException(
                             $"ID [\"{id}\"] using method [{lookupMethod:G}] found nothing.");
                     }

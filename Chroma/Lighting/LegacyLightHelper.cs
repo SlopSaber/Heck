@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Chroma.Lighting;
@@ -39,10 +38,12 @@ internal class LegacyLightHelper
             return null;
         }
 
-        List<(float, Color)> colors = dictionaryID.Where(n => n.Item1 <= beatmapEventData.time).ToList();
-        if (colors.Count > 0)
+        for (int i = dictionaryID.Count - 1; i >= 0; i--)
         {
-            return colors.Last().Item2;
+            if (dictionaryID[i].Item1 <= beatmapEventData.time)
+            {
+                return dictionaryID[i].Item2;
+            }
         }
 
         return null;

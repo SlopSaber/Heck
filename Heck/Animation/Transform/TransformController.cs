@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using CustomJSONData;
 using CustomJSONData.CustomBeatmap;
 using HarmonyLib;
@@ -110,7 +109,7 @@ public class TransformController : MonoBehaviour
         }
         else
         {
-            Track track = Tracks.First();
+            Track track = Tracks[0];
             scale = track.GetProperty<Vector3>(SCALE);
             rotation = track.GetProperty<Quaternion>(ROTATION);
             localRotation = track.GetProperty<Quaternion>(LOCAL_ROTATION);

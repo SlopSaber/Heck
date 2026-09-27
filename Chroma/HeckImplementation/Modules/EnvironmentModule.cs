@@ -167,7 +167,12 @@ internal class EnvironmentModule : IModule
             }
         }
 
+#if !PRE_V1_37_1
+        // The checker also verifies that the map environment actually loaded.
+        OverrideType = dependency ? EnvironmentOverrideType.MapOverride : EnvironmentOverrideType.None;
+#else
         OverrideType = EnvironmentOverrideType.None;
+#endif
         return dependency;
     }
 }

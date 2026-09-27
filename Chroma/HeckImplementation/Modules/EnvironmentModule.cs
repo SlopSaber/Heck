@@ -132,7 +132,12 @@ internal class EnvironmentModule : IModule
               (customBeatmapSaveData.customData.Get<List<object>>(ENVIRONMENT)?.Count ?? 0) > 0)))
 #endif
         {
+#if !PRE_V1_37_1
+            // Loading Chroma features does not itself force the map environment.
+            if (settingForce)
+#else
             if (settingForce || dependency)
+#endif
             {
                 moduleArgs.OverrideEnvironmentSettings = null;
                 OverrideType = EnvironmentOverrideType.MapOverride;

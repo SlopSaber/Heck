@@ -344,35 +344,41 @@ internal static class ProcessNotesNoodleDataInTimeRow
     private static IEnumerable<CodeInstruction> ProcessColorNotesInTimeRowTranspiler(
         IEnumerable<CodeInstruction> instructions)
     {
-        return new CodeMatcher(instructions)
+        CodeMatcher matcher = new(instructions);
 
-            // clamp
-            /*
-             * -- List<NoteData> list = this._notesInColumnsReusableProcessingListOfLists[noteData.lineIndex];
-             * ++ List<NoteData> list = this._notesInColumnsReusableProcessingListOfLists[Mathf.Clamp(noteData.lineIndex, 0, 3)];
-             */
-            .MatchForward(
-                true,
-                new CodeMatch(OpCodes.Ldloc_S),
-                new CodeMatch(OpCodes.Callvirt),
-                new CodeMatch(OpCodes.Ldelem_Ref))
-            .Insert(
+        // clamp
+        /*
+         * -- List<NoteData> list = this._notesInColumnsReusableProcessingListOfLists[noteData.lineIndex];
+         * ++ List<NoteData> list = this._notesInColumnsReusableProcessingListOfLists[Mathf.Clamp(noteData.lineIndex, 0, 3)];
+         */
+        matcher.MatchForward(
+            true,
+            new CodeMatch(OpCodes.Ldloc_S),
+            new CodeMatch(OpCodes.Callvirt),
+            new CodeMatch(OpCodes.Ldelem_Ref));
+        if (matcher.IsValid)
+        {
+            matcher.Insert(
                 new CodeInstruction(OpCodes.Ldc_I4_0),
                 new CodeInstruction(OpCodes.Ldc_I4_3),
-                new CodeInstruction(OpCodes.Call, _clampMethod))
+                new CodeInstruction(OpCodes.Call, _clampMethod));
+        }
 
-            // yeet slider processing
-            /*
-             * ++ return;
-             * foreach (SliderData sliderData in enumerable2)
-             */
-            .MatchForward(
-                false,
-                new CodeMatch(OpCodes.Ldloc_1),
-                new CodeMatch(OpCodes.Callvirt),
-                new CodeMatch(OpCodes.Stloc_S))
-            .Insert(
-                new CodeInstruction(OpCodes.Ret))
-            .InstructionEnumeration();
+        // yeet slider processing
+        /*
+         * ++ return;
+         * foreach (SliderData sliderData in enumerable2)
+         */
+        matcher.MatchForward(
+            false,
+            new CodeMatch(OpCodes.Ldloc_1),
+            new CodeMatch(OpCodes.Callvirt),
+            new CodeMatch(OpCodes.Stloc_S));
+        if (matcher.IsValid)
+        {
+            matcher.Insert(new CodeInstruction(OpCodes.Ret));
+        }
+
+        return matcher.InstructionEnumeration();
     }
 }

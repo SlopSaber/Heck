@@ -76,6 +76,7 @@
     <Reference Include="MediaLoader" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\MediaLoader.dll" />
     <Reference Include="MonoMod.Utils" HintPath="$(GameDirectory)\Libs\MonoMod.Utils.dll" />
     <Reference Include="Newtonsoft.Json" HintPath="$(GameDirectory)\Libs\Newtonsoft.Json.dll" />
+    <Reference Include="Rendering" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\Rendering.dll" Condition="$(Configuration.EndsWith('1.45.2'))" />
     <Reference Include="SiraUtil" HintPath="$(GameDirectory)\Plugins\SiraUtil.dll" Publicize="true" />
     <Reference Include="UnityEngine.AudioModule" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\UnityEngine.AudioModule.dll" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(GameDirectory)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll" />

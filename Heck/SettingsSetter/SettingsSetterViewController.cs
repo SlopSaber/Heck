@@ -464,6 +464,9 @@ internal class SettingsSetterViewController : BSMLResourceViewController, IPlayV
     #endif
             _settingsManager.settings.quality.burnMarkTrails = _modifiedMainSettings.BurnMarkTrailsEnabled;
             _settingsManager.settings.quality.screenDisplacementEffects = _modifiedMainSettings.ScreenDisplacementEffectsEnabled;
+#if V1_45_2
+            ScreenDisplacementEffectRendererFeature.enabled = _modifiedMainSettings.ScreenDisplacementEffectsEnabled;
+#endif
             _settingsManager.settings.quality.maxShockwaveParticles = _modifiedMainSettings.MaxShockwaveParticles;
 #elif V1_37_1
             PerformancePresetOverride.SettingsOverride = _modifiedMainSettings;
@@ -533,6 +536,9 @@ internal class SettingsSetterViewController : BSMLResourceViewController, IPlayV
         _settingsManager.settings.quality.smokeGraphics = _cachedMainSettings.SmokeGraphicsSettings;
         _settingsManager.settings.quality.burnMarkTrails = _cachedMainSettings.BurnMarkTrailsEnabled;
         _settingsManager.settings.quality.screenDisplacementEffects = _cachedMainSettings.ScreenDisplacementEffectsEnabled;
+#if V1_45_2
+        ScreenDisplacementEffectRendererFeature.enabled = _cachedMainSettings.ScreenDisplacementEffectsEnabled;
+#endif
         _settingsManager.settings.quality.maxShockwaveParticles = _cachedMainSettings.MaxShockwaveParticles;
 #else
         _mainSettings.mirrorGraphicsSettings.value = _cachedMainSettings.MirrorGraphicsSettings;

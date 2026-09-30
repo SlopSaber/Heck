@@ -45,6 +45,16 @@ public class TransformController : MonoBehaviour
         UpdatePos();
     }
 
+    private void OnDestroy()
+    {
+        // Destroyed Unity wrappers can outlive their native objects. Drop this controller's
+        // references without clearing the shared track list used by other controllers.
+        Tracks = [];
+        PositionUpdated = null;
+        RotationUpdated = null;
+        ScaleUpdated = null;
+    }
+
     private void OnTransformParentChanged()
     {
         UpdatePos();
@@ -215,5 +225,6 @@ public sealed class TransformControllerFactory : IDisposable
     public void Dispose()
     {
         _transformControllers.DoIf(n => n != null, Object.Destroy);
+        _transformControllers.Clear();
     }
 }

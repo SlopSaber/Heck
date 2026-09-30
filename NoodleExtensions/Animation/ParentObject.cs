@@ -18,6 +18,7 @@ namespace NoodleExtensions.Animation;
 internal class ParentObject : MonoBehaviour
 {
     private bool _leftHanded;
+    private HashSet<ParentObject>? _parentObjects;
     private Quaternion _startLocalRot = Quaternion.identity;
     private Vector3 _startPos = Vector3.zero;
     private Quaternion _startRot = Quaternion.identity;
@@ -102,6 +103,7 @@ internal class ParentObject : MonoBehaviour
         }
 
         parentObjects.Add(this);
+        _parentObjects = parentObjects;
     }
 
     private static void OnTrackGameObjectRemoved(GameObject trackGameObject)
@@ -116,6 +118,11 @@ internal class ParentObject : MonoBehaviour
             track.GameObjectAdded -= OnTrackGameObjectAdded;
             track.GameObjectRemoved -= OnTrackGameObjectRemoved;
         }
+
+        ChildrenTracks.Clear();
+        _parentObjects?.Remove(this);
+        _parentObjects = null;
+        _track = null!;
     }
 
     private void OnTrackGameObjectAdded(GameObject trackGameObject)

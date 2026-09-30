@@ -86,15 +86,6 @@ internal class EnvironmentEnhancementManager : IAffinity
         _environmentOverrideChecker = environmentOverrideChecker;
     }
 
-    private static void GetChildRecursive(Transform gameObject, ref List<Transform> children)
-    {
-        foreach (Transform child in gameObject)
-        {
-            children.Add(child);
-            GetChildRecursive(child, ref children);
-        }
-    }
-
     private IEnumerator DelayedStart()
     {
         yield return new WaitForEndOfFrame();
@@ -421,36 +412,57 @@ internal class EnvironmentEnhancementManager : IAffinity
                 })
             .ToList();
 
-        // Adds the children of whitelist GameObjects
-        // Mainly for grabbing cone objects in KaleidoscopeEnvironment
-        gameObjects
-            .ToList()
-            .ForEach(
-                n =>
+        // Preserve seed and depth-first child order, visiting each hierarchy node once.
+        HashSet<GameObject> knownObjects = new(gameObjects);
+        HashSet<Transform> visited = [];
+        Stack<Transform> pending = new();
+        int seedCount = gameObjects.Count;
+        for (int seed = 0; seed < seedCount; seed++)
+        {
+            pending.Push(gameObjects[seed].transform);
+            while (pending.Count > 0)
+            {
+                Transform current = pending.Pop();
+                if (!visited.Add(current))
                 {
-                    List<Transform> allChildren = [];
-                    GetChildRecursive(n.transform, ref allChildren);
+                    continue;
+                }
 
-                    foreach (Transform transform in allChildren)
-                    {
-                        if (!gameObjects.Contains(transform.gameObject))
-                        {
-                            gameObjects.Add(transform.gameObject);
-                        }
-                    }
-                });
+                if (knownObjects.Add(current.gameObject))
+                {
+                    gameObjects.Add(current.gameObject);
+                }
 
-        List<string> objectsToPrint = [];
+                for (int child = current.childCount - 1; child >= 0; child--)
+                {
+                    pending.Push(current.GetChild(child));
+                }
+            }
+        }
+
+        HashSet<int> indexedScenes = [];
+        Dictionary<GameObject, int> rootIndices = [];
+        List<string>? objectsToPrint = _config.PrintEnvironmentEnhancementDebug ? [] : null;
 
         foreach (GameObject gameObject in gameObjects)
         {
-            GameObjectInfo gameObjectInfo = new(gameObject);
-            result.Add(new GameObjectInfo(gameObject));
-            objectsToPrint.Add(gameObjectInfo.FullID);
+            Scene scene = gameObject.scene;
+            if (indexedScenes.Add(scene.handle))
+            {
+                GameObject[] roots = scene.GetRootGameObjects();
+                for (int root = 0; root < roots.Length; root++)
+                {
+                    rootIndices[roots[root]] = root;
+                }
+            }
+
+            GameObjectInfo gameObjectInfo = new(gameObject, rootIndices);
+            result.Add(gameObjectInfo);
+            objectsToPrint?.Add(gameObjectInfo.FullID);
         }
 
         // ReSharper disable once InvertIf
-        if (_config.PrintEnvironmentEnhancementDebug)
+        if (objectsToPrint != null)
         {
             objectsToPrint.Sort();
             objectsToPrint.ForEach(n => _log.Debug(n));

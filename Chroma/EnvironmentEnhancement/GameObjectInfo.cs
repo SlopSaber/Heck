@@ -6,7 +6,7 @@ namespace Chroma.EnvironmentEnhancement;
 
 internal readonly struct GameObjectInfo
 {
-    internal GameObjectInfo(GameObject gameObject)
+    internal GameObjectInfo(GameObject gameObject, IReadOnlyDictionary<GameObject, int>? rootIndices = null)
     {
         List<string> nameList = [];
 
@@ -25,8 +25,11 @@ internal readonly struct GameObjectInfo
             {
                 // Why doesnt GetSiblingIndex work on root objects?
                 GameObject currentObject = transform.gameObject;
-                GameObject[] rootGameObjects = currentObject.scene.GetRootGameObjects();
-                index = Array.IndexOf(rootGameObjects, currentObject);
+                if (rootIndices == null || !rootIndices.TryGetValue(currentObject, out index))
+                {
+                    GameObject[] rootGameObjects = currentObject.scene.GetRootGameObjects();
+                    index = Array.IndexOf(rootGameObjects, currentObject);
+                }
             }
 
             nameList.Add($"[{index}]{transform.name}");

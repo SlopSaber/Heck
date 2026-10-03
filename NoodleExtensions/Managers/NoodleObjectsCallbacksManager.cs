@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -110,37 +110,6 @@ internal class NoodleObjectsCallbacksManager : IDisposable
         _prevSongtime = songTime;
     }
 
-    private void Init()
-    {
-        BeatmapObjectData[] objects = _beatmapData.beatmapObjectDatas.ToArray();
-        float[] keys = new float[objects.Length];
-        for (int i = 0; i < objects.Length; i++)
-        {
-            BeatmapObjectData beatmapObjectData = objects[i];
-            if (!_deserializedData.Resolve(beatmapObjectData, out NoodleObjectData? noodleData))
-            {
-                throw new InvalidOperationException("Failed to get data.");
-            }
-
-            float? noteJumpMovementSpeed = noodleData.Njs;
-            float? noteJumpStartBeatOffset = noodleData.SpawnOffset;
-            float aheadTime = _spawnDataManager.GetSpawnAheadTime(
-                noteJumpMovementSpeed,
-                noteJumpStartBeatOffset);
-            noodleData.InternalAheadTime = aheadTime;
-            keys[i] = beatmapObjectData.time - aheadTime;
-        }
-
-        int[] order = PrepareOrder(keys);
-        LinkedList<BeatmapDataItem> objectDatas = new();
-        foreach (int index in order)
-        {
-            objectDatas.AddLast(objects[index]);
-        }
-
-        _firstNode = objectDatas.First;
-    }
-
     private static int[] PrepareOrder(float[] keys)
     {
         Task<int[]> task;
@@ -186,6 +155,37 @@ internal class NoodleObjectsCallbacksManager : IDisposable
             CancellationToken.None,
             TaskCreationOptions.DenyChildAttach,
             TaskScheduler.Default);
+    }
+
+    private void Init()
+    {
+        BeatmapObjectData[] objects = _beatmapData.beatmapObjectDatas.ToArray();
+        float[] keys = new float[objects.Length];
+        for (int i = 0; i < objects.Length; i++)
+        {
+            BeatmapObjectData beatmapObjectData = objects[i];
+            if (!_deserializedData.Resolve(beatmapObjectData, out NoodleObjectData? noodleData))
+            {
+                throw new InvalidOperationException("Failed to get data.");
+            }
+
+            float? noteJumpMovementSpeed = noodleData.Njs;
+            float? noteJumpStartBeatOffset = noodleData.SpawnOffset;
+            float aheadTime = _spawnDataManager.GetSpawnAheadTime(
+                noteJumpMovementSpeed,
+                noteJumpStartBeatOffset);
+            noodleData.InternalAheadTime = aheadTime;
+            keys[i] = beatmapObjectData.time - aheadTime;
+        }
+
+        int[] order = PrepareOrder(keys);
+        LinkedList<BeatmapDataItem> objectDatas = new();
+        foreach (int index in order)
+        {
+            objectDatas.AddLast(objects[index]);
+        }
+
+        _firstNode = objectDatas.First;
     }
 
     private void OnReload()

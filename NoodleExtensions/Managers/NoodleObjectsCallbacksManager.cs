@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using CustomJSONData.CustomBeatmap;
 using Heck.Deserialize;
 using Heck.ReLoad;
@@ -110,26 +112,80 @@ internal class NoodleObjectsCallbacksManager : IDisposable
 
     private void Init()
     {
-        IEnumerable<BeatmapDataItem> objectDatas = _beatmapData
-            .beatmapObjectDatas
-            .OrderBy(
-                beatmapObjectData =>
-                {
-                    if (!_deserializedData.Resolve(beatmapObjectData, out NoodleObjectData? noodleData))
-                    {
-                        throw new InvalidOperationException("Failed to get data.");
-                    }
+        BeatmapObjectData[] objects = _beatmapData.beatmapObjectDatas.ToArray();
+        float[] keys = new float[objects.Length];
+        for (int i = 0; i < objects.Length; i++)
+        {
+            BeatmapObjectData beatmapObjectData = objects[i];
+            if (!_deserializedData.Resolve(beatmapObjectData, out NoodleObjectData? noodleData))
+            {
+                throw new InvalidOperationException("Failed to get data.");
+            }
 
-                    float? noteJumpMovementSpeed = noodleData.Njs;
-                    float? noteJumpStartBeatOffset = noodleData.SpawnOffset;
-                    float aheadTime = _spawnDataManager.GetSpawnAheadTime(
-                        noteJumpMovementSpeed,
-                        noteJumpStartBeatOffset);
-                    noodleData.InternalAheadTime = aheadTime;
-                    return beatmapObjectData.time - aheadTime;
-                });
+            float? noteJumpMovementSpeed = noodleData.Njs;
+            float? noteJumpStartBeatOffset = noodleData.SpawnOffset;
+            float aheadTime = _spawnDataManager.GetSpawnAheadTime(
+                noteJumpMovementSpeed,
+                noteJumpStartBeatOffset);
+            noodleData.InternalAheadTime = aheadTime;
+            keys[i] = beatmapObjectData.time - aheadTime;
+        }
 
-        _firstNode = new LinkedList<BeatmapDataItem>(objectDatas).First;
+        int[] order = PrepareOrder(keys);
+        LinkedList<BeatmapDataItem> objectDatas = new();
+        foreach (int index in order)
+        {
+            objectDatas.AddLast(objects[index]);
+        }
+
+        _firstNode = objectDatas.First;
+    }
+
+    private static int[] PrepareOrder(float[] keys)
+    {
+        Task<int[]> task;
+        if (ExecutionContext.IsFlowSuppressed())
+        {
+            task = ScheduleOrder(keys);
+        }
+        else
+        {
+            using (ExecutionContext.SuppressFlow())
+            {
+                task = ScheduleOrder(keys);
+            }
+        }
+
+        try
+        {
+            if (!task.IsCompleted)
+            {
+                ((IAsyncResult)task).AsyncWaitHandle.WaitOne();
+            }
+
+            return task.GetAwaiter().GetResult();
+        }
+        finally
+        {
+            if (task.IsCompleted)
+            {
+                task.Dispose();
+            }
+        }
+    }
+
+    private static Task<int[]> ScheduleOrder(float[] keys)
+    {
+        return Task.Factory.StartNew(
+            static state =>
+            {
+                float[] values = (float[])state!;
+                return Enumerable.Range(0, values.Length).OrderBy(index => values[index]).ToArray();
+            },
+            keys,
+            CancellationToken.None,
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default);
     }
 
     private void OnReload()

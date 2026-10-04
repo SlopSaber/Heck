@@ -342,59 +342,6 @@ public class LightColorizer
         }
     }
 
-    private static int[][] PreparePropagationGroups(int[] keys)
-    {
-        Dictionary<int, List<int>> groups = new();
-        for (int ordinal = 0; ordinal < keys.Length; ordinal++)
-        {
-            if (groups.TryGetValue(keys[ordinal], out List<int> group))
-            {
-                group.Add(ordinal);
-            }
-            else
-            {
-                groups.Add(keys[ordinal], [ordinal]);
-            }
-        }
-
-        int[][] result = new int[groups.Count][];
-        int index = 0;
-        foreach (List<int> group in groups.Values)
-        {
-            result[index++] = group.ToArray();
-        }
-
-        return result;
-    }
-
-    private static Task<int[][]> StartPropagationPreparation(int[] keys)
-    {
-        return Task.Factory.StartNew(
-            static state => PreparePropagationGroups((int[])state!),
-            keys,
-            CancellationToken.None,
-            TaskCreationOptions.DenyChildAttach,
-            TaskScheduler.Default);
-    }
-
-    private static int[][] PreparePropagationGroupsOnWorker(int[] keys)
-    {
-        Task<int[][]> task;
-        if (ExecutionContext.IsFlowSuppressed())
-        {
-            task = StartPropagationPreparation(keys);
-        }
-        else
-        {
-            using (ExecutionContext.SuppressFlow())
-            {
-                task = StartPropagationPreparation(keys);
-            }
-        }
-
-        return task.GetAwaiter().GetResult();
-    }
-
     public void Colorize(IEnumerable<ILightWithId>? selectLights, params Color?[] colors)
     {
         Colorize(true, selectLights, colors);
@@ -466,5 +413,58 @@ public class LightColorizer
     }
 
     [UsedImplicitly]
+    private static int[][] PreparePropagationGroups(int[] keys)
+    {
+        Dictionary<int, List<int>> groups = new();
+        for (int ordinal = 0; ordinal < keys.Length; ordinal++)
+        {
+            if (groups.TryGetValue(keys[ordinal], out List<int> group))
+            {
+                group.Add(ordinal);
+            }
+            else
+            {
+                groups.Add(keys[ordinal], [ordinal]);
+            }
+        }
+
+        int[][] result = new int[groups.Count][];
+        int index = 0;
+        foreach (List<int> group in groups.Values)
+        {
+            result[index++] = group.ToArray();
+        }
+
+        return result;
+    }
+
+    private static Task<int[][]> StartPropagationPreparation(int[] keys)
+    {
+        return Task.Factory.StartNew(
+            static state => PreparePropagationGroups((int[])state!),
+            keys,
+            CancellationToken.None,
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default);
+    }
+
+    private static int[][] PreparePropagationGroupsOnWorker(int[] keys)
+    {
+        Task<int[][]> task;
+        if (ExecutionContext.IsFlowSuppressed())
+        {
+            task = StartPropagationPreparation(keys);
+        }
+        else
+        {
+            using (ExecutionContext.SuppressFlow())
+            {
+                task = StartPropagationPreparation(keys);
+            }
+        }
+
+        return task.GetAwaiter().GetResult();
+    }
+
     internal class Factory : PlaceholderFactory<ChromaLightSwitchEventEffect, LightColorizer>;
 }

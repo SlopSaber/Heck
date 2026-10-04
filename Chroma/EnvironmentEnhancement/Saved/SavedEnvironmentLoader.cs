@@ -4,7 +4,6 @@ using System.IO;
 using Chroma.Settings;
 using IPA.Utilities;
 using JetBrains.Annotations;
-using Newtonsoft.Json;
 using SiraUtil.Logging;
 
 namespace Chroma.EnvironmentEnhancement.Saved;
@@ -51,40 +50,31 @@ internal class SavedEnvironmentLoader
     {
         Environments = new Dictionary<string?, SavedEnvironment?>();
 
-        if (!Directory.Exists(_directory))
+        using SavedEnvironmentReader reader = new(_directory, _currVer);
+        while (reader.ReadNext() is { } file)
         {
-            Directory.CreateDirectory(_directory);
-        }
-
-        JsonSerializerSettings serializerSettings = new()
-        {
-            MissingMemberHandling = MissingMemberHandling.Error
-        };
-
-        foreach (string file in Directory.EnumerateFiles(_directory, "*.dat"))
-        {
-            try
+            Exception? error = file.Error;
+            if (file.Environment != null)
             {
-                using StreamReader streamReader = new(file);
-                using JsonReader reader = new JsonTextReader(streamReader);
-                JsonSerializer serializer = JsonSerializer.Create(serializerSettings);
-                SavedEnvironment savedEnvironment = serializer.Deserialize<SavedEnvironment>(reader) ??
-                                                    throw new InvalidOperationException("Deserializing returned null.");
-                if (savedEnvironment.Version != _currVer)
+                try
                 {
-                    throw new InvalidOperationException(
-                        $"Unhandled version: [{savedEnvironment.Version}], must be [{_currVer}].");
+                    _log.Trace($"Loaded [{file.File}]");
+                    Environments.Add(file.FileName, file.Environment);
                 }
-
-                string fileName = Path.GetFileName(file);
-                _log.Trace($"Loaded [{file}]");
-
-                Environments.Add(fileName, savedEnvironment);
+                catch (Exception e)
+                {
+                    error = e;
+                }
+                finally
+                {
+                    error = reader.CompleteFile() ?? error;
+                }
             }
-            catch (Exception e)
+
+            if (error != null)
             {
-                _log.Error($"Encountered error deserializing [{file}]");
-                _log.Error(e);
+                _log.Error($"Encountered error deserializing [{file.File}]");
+                _log.Error(error);
             }
         }
     }

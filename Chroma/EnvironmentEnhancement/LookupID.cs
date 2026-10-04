@@ -114,11 +114,6 @@ internal static class LookupID
         string[] ids = new string[objects.Length];
         for (int index = 0; index < objects.Length; index++)
         {
-            if (objects[index] is null)
-            {
-                return LookupID_LegacyOnCaller(source, id, lookupMethod);
-            }
-
             ids[index] = objects[index].FullID;
         }
 

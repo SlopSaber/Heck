@@ -127,6 +127,7 @@ internal sealed class SavedEnvironmentReader : IDisposable
             }
 
             string fileName = Path.GetFileName(file);
+
             // Keep readers open until owner publication; disposal faults follow Trace/Add.
             return (file, fileName, environment, null);
         }

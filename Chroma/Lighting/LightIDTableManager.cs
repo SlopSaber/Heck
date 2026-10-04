@@ -77,89 +77,6 @@ internal class LightIDTableManager
         _ = _tableInitialization.Value;
     }
 
-    private static Task<TableInitialization> StartTableInitialization()
-    {
-        Tuple<CultureInfo, CultureInfo> cultures = Tuple.Create(
-            CultureInfo.ReadOnly((CultureInfo)CultureInfo.CurrentCulture.Clone()),
-            CultureInfo.ReadOnly((CultureInfo)CultureInfo.CurrentUICulture.Clone()));
-        if (ExecutionContext.IsFlowSuppressed())
-        {
-            return StartTableInitialization(cultures);
-        }
-
-        using (ExecutionContext.SuppressFlow())
-        {
-            return StartTableInitialization(cultures);
-        }
-    }
-
-    private static Task<TableInitialization> StartTableInitialization(Tuple<CultureInfo, CultureInfo> cultures)
-    {
-        return Task.Factory.StartNew(
-            ReadTablesWithCulture,
-            cultures,
-            CancellationToken.None,
-            TaskCreationOptions.DenyChildAttach,
-            TaskScheduler.Default);
-    }
-
-    private static TableInitialization ReadTablesWithCulture(object? state)
-    {
-        Tuple<CultureInfo, CultureInfo> cultures = (Tuple<CultureInfo, CultureInfo>)state!;
-        CultureInfo previousCulture = CultureInfo.CurrentCulture;
-        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
-        try
-        {
-            CultureInfo.CurrentCulture = cultures.Item1;
-            CultureInfo.CurrentUICulture = cultures.Item2;
-            return ReadTables();
-        }
-        finally
-        {
-            CultureInfo.CurrentCulture = previousCulture;
-            CultureInfo.CurrentUICulture = previousUICulture;
-        }
-    }
-
-    private static TableInitialization ReadTables()
-    {
-        const string tableNamespace = "Chroma.LightIDTables.";
-        Dictionary<string, Dictionary<int, Dictionary<int, int>>> tables = new();
-        try
-        {
-            Assembly assembly = typeof(LightIDTableManager).Assembly;
-            IEnumerable<string> tableNames = assembly.GetManifestResourceNames().Where(n => n.StartsWith(tableNamespace));
-            foreach (string tableName in tableNames)
-            {
-                using StreamReader stream = new(
-                    assembly.GetManifestResourceStream(tableName) ??
-                    throw new InvalidOperationException($"Failed to retrieve {tableName}"));
-                using JsonReader reader = new JsonTextReader(stream);
-                Dictionary<int, Dictionary<int, int>> typeTable = new();
-                JsonSerializer serializer = new();
-                Dictionary<string, Dictionary<string, int>> rawDict =
-                    serializer.Deserialize<Dictionary<string, Dictionary<string, int>>>(reader) ??
-                    throw new InvalidOperationException($"Failed to deserialize ID table [{tableName}]");
-                foreach ((string key, Dictionary<string, int> value) in rawDict)
-                {
-                    typeTable[int.Parse(key)] = value.ToDictionary(n => int.Parse(n.Key), n => n.Value);
-                }
-
-                string tableNameWithoutExtension = Path.GetFileNameWithoutExtension(tableName.Remove(
-                    tableName.IndexOf(tableNamespace, StringComparison.Ordinal),
-                    tableNamespace.Length));
-                tables.Add(tableNameWithoutExtension, typeTable);
-            }
-
-            return new TableInitialization(tables, null);
-        }
-        catch (Exception error)
-        {
-            // Keep tables read before failure available to the original fallback path.
-            return new TableInitialization(tables, error);
-        }
-    }
-
     internal int? GetActiveTableValue(int lightID, int id)
     {
         if (_activeTable.TryGetValue(lightID, out Dictionary<int, int> dictioanry) &&
@@ -269,6 +186,89 @@ internal class LightIDTableManager
         else
         {
             _log.Warn($"Table does not contain light ID [{lightID}]");
+        }
+    }
+
+    private static Task<TableInitialization> StartTableInitialization()
+    {
+        Tuple<CultureInfo, CultureInfo> cultures = Tuple.Create(
+            CultureInfo.ReadOnly((CultureInfo)CultureInfo.CurrentCulture.Clone()),
+            CultureInfo.ReadOnly((CultureInfo)CultureInfo.CurrentUICulture.Clone()));
+        if (ExecutionContext.IsFlowSuppressed())
+        {
+            return StartTableInitialization(cultures);
+        }
+
+        using (ExecutionContext.SuppressFlow())
+        {
+            return StartTableInitialization(cultures);
+        }
+    }
+
+    private static Task<TableInitialization> StartTableInitialization(Tuple<CultureInfo, CultureInfo> cultures)
+    {
+        return Task.Factory.StartNew(
+            ReadTablesWithCulture,
+            cultures,
+            CancellationToken.None,
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default);
+    }
+
+    private static TableInitialization ReadTablesWithCulture(object? state)
+    {
+        Tuple<CultureInfo, CultureInfo> cultures = (Tuple<CultureInfo, CultureInfo>)state!;
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = cultures.Item1;
+            CultureInfo.CurrentUICulture = cultures.Item2;
+            return ReadTables();
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
+    }
+
+    private static TableInitialization ReadTables()
+    {
+        const string tableNamespace = "Chroma.LightIDTables.";
+        Dictionary<string, Dictionary<int, Dictionary<int, int>>> tables = new();
+        try
+        {
+            Assembly assembly = typeof(LightIDTableManager).Assembly;
+            IEnumerable<string> tableNames = assembly.GetManifestResourceNames().Where(n => n.StartsWith(tableNamespace));
+            foreach (string tableName in tableNames)
+            {
+                using StreamReader stream = new(
+                    assembly.GetManifestResourceStream(tableName) ??
+                    throw new InvalidOperationException($"Failed to retrieve {tableName}"));
+                using JsonReader reader = new JsonTextReader(stream);
+                Dictionary<int, Dictionary<int, int>> typeTable = new();
+                JsonSerializer serializer = new();
+                Dictionary<string, Dictionary<string, int>> rawDict =
+                    serializer.Deserialize<Dictionary<string, Dictionary<string, int>>>(reader) ??
+                    throw new InvalidOperationException($"Failed to deserialize ID table [{tableName}]");
+                foreach ((string key, Dictionary<string, int> value) in rawDict)
+                {
+                    typeTable[int.Parse(key)] = value.ToDictionary(n => int.Parse(n.Key), n => n.Value);
+                }
+
+                string tableNameWithoutExtension = Path.GetFileNameWithoutExtension(tableName.Remove(
+                    tableName.IndexOf(tableNamespace, StringComparison.Ordinal),
+                    tableNamespace.Length));
+                tables.Add(tableNameWithoutExtension, typeTable);
+            }
+
+            return new TableInitialization(tables, null);
+        }
+        catch (Exception error)
+        {
+            // Keep tables read before failure available to the original fallback path.
+            return new TableInitialization(tables, error);
         }
     }
 

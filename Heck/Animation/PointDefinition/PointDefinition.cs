@@ -184,66 +184,6 @@ public abstract class PointDefinition<T> : IPointDefinition
             });
     }
 
-    private Modifier<T> DeserializeModifier(List<object> list, PreparedPoints? prepared)
-    {
-        Modifier<T>[]? modifiers = null;
-        Operation? operation = null;
-        IValues[]? values = null;
-        foreach (PreparedGroup grouping in GetGroups(list, prepared))
-        {
-            object[] groupList = grouping.Items;
-            switch (grouping.Key)
-            {
-                case GroupType.Value:
-                    values = groupList.DeserializeValues();
-                    break;
-
-                case GroupType.Flag:
-                    Assert.IsEqual(1, groupList.Length, "Modifier must have one operation");
-                    operation = (Operation)Enum.Parse(typeof(Operation), (string)groupList.First());
-                    break;
-
-                case GroupType.Modifier:
-                    modifiers = groupList.Cast<List<object>>().Select(n => DeserializeModifier(n, prepared)).ToArray();
-                    break;
-            }
-        }
-
-        if (values == null)
-        {
-            throw new InvalidOperationException("No points found.");
-        }
-
-        if (operation == null)
-        {
-            throw new InvalidOperationException("No operation found.");
-        }
-
-        return CreateModifier(values, modifiers ?? [], operation.Value);
-    }
-
-    // Use binary search instead of linear search.
-    private void SearchIndex(float time, out int l, out int r)
-    {
-        l = 0;
-        r = Count;
-
-        while (l < r - 1)
-        {
-            int m = (l + r) / 2;
-            float pointTime = _points[m].Time;
-
-            if (pointTime < time)
-            {
-                l = m;
-            }
-            else
-            {
-                r = m;
-            }
-        }
-    }
-
     private static PreparedPoints? TryPreparePoints(IReadOnlyCollection<object> list, IEnumerable<List<object>> points)
     {
         if (Thread.CurrentThread.IsThreadPoolThread || list.GetType() != typeof(List<object>) ||
@@ -478,6 +418,66 @@ public abstract class PointDefinition<T> : IPointDefinition
         }
 
         return true;
+    }
+
+    private Modifier<T> DeserializeModifier(List<object> list, PreparedPoints? prepared)
+    {
+        Modifier<T>[]? modifiers = null;
+        Operation? operation = null;
+        IValues[]? values = null;
+        foreach (PreparedGroup grouping in GetGroups(list, prepared))
+        {
+            object[] groupList = grouping.Items;
+            switch (grouping.Key)
+            {
+                case GroupType.Value:
+                    values = groupList.DeserializeValues();
+                    break;
+
+                case GroupType.Flag:
+                    Assert.IsEqual(1, groupList.Length, "Modifier must have one operation");
+                    operation = (Operation)Enum.Parse(typeof(Operation), (string)groupList.First());
+                    break;
+
+                case GroupType.Modifier:
+                    modifiers = groupList.Cast<List<object>>().Select(n => DeserializeModifier(n, prepared)).ToArray();
+                    break;
+            }
+        }
+
+        if (values == null)
+        {
+            throw new InvalidOperationException("No points found.");
+        }
+
+        if (operation == null)
+        {
+            throw new InvalidOperationException("No operation found.");
+        }
+
+        return CreateModifier(values, modifiers ?? [], operation.Value);
+    }
+
+    // Use binary search instead of linear search.
+    private void SearchIndex(float time, out int l, out int r)
+    {
+        l = 0;
+        r = Count;
+
+        while (l < r - 1)
+        {
+            int m = (l + r) / 2;
+            float pointTime = _points[m].Time;
+
+            if (pointTime < time)
+            {
+                l = m;
+            }
+            else
+            {
+                r = m;
+            }
+        }
     }
 
     private readonly struct PreparedGroup(GroupType key, object[] items)

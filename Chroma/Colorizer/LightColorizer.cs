@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Chroma.Lighting;
 using IPA.Utilities;
 using JetBrains.Annotations;
@@ -174,6 +176,8 @@ public class LightColorizer
 {
     internal const int COLOR_FIELDS = 4;
 
+    private const int MIN_WORKER_LIGHTS = 128;
+
     private readonly LightColorizerManager _colorizerManager;
 
     private readonly Color?[] _colors = new Color?[COLOR_FIELDS];
@@ -258,8 +262,11 @@ public class LightColorizer
 
             _lightsPropagationSource = lights;
 
-            // AAAAAA PROPAGATION STUFFF
+            bool prepareOnWorker = lights is ILightWithId[] { Length: >= MIN_WORKER_LIGHTS } &&
+                                   !Thread.CurrentThread.IsThreadPoolThread;
             Dictionary<int, List<ILightWithId>> lightsPreGroup = new();
+            List<ILightWithId>? capturedLights = prepareOnWorker ? new() : null;
+            List<int>? capturedKeys = prepareOnWorker ? new() : null;
             TrackLaneRingsManager[] managers = Object.FindObjectsByType<TrackLaneRingsManager>(FindObjectsSortMode.InstanceID);
             foreach (ILightWithId light in lights)
             {
@@ -280,7 +287,12 @@ public class LightColorizer
                     }
                 }
 
-                if (lightsPreGroup.TryGetValue(z, out List<ILightWithId> list))
+                if (prepareOnWorker)
+                {
+                    capturedLights!.Add(light);
+                    capturedKeys!.Add(z);
+                }
+                else if (lightsPreGroup.TryGetValue(z, out List<ILightWithId> list))
                 {
                     list.Add(light);
                 }
@@ -289,6 +301,28 @@ public class LightColorizer
                     list = [light];
                     lightsPreGroup.Add(z, list);
                 }
+            }
+
+            if (prepareOnWorker)
+            {
+                int[] keys = capturedKeys!.ToArray();
+                int[][] groups = keys.Length >= MIN_WORKER_LIGHTS
+                    ? PreparePropagationGroupsOnWorker(keys)
+                    : PreparePropagationGroups(keys);
+                _lightsPropagationGrouped = new ILightWithId[groups.Length][];
+                for (int groupIndex = 0; groupIndex < groups.Length; groupIndex++)
+                {
+                    int[] ordinals = groups[groupIndex];
+                    ILightWithId[] group = new ILightWithId[ordinals.Length];
+                    for (int ordinal = 0; ordinal < ordinals.Length; ordinal++)
+                    {
+                        group[ordinal] = capturedLights![ordinals[ordinal]];
+                    }
+
+                    _lightsPropagationGrouped[groupIndex] = group;
+                }
+
+                return _lightsPropagationGrouped;
             }
 
             _lightsPropagationGrouped = new ILightWithId[lightsPreGroup.Count][];
@@ -306,6 +340,59 @@ public class LightColorizer
 
             return _lightsPropagationGrouped;
         }
+    }
+
+    private static int[][] PreparePropagationGroups(int[] keys)
+    {
+        Dictionary<int, List<int>> groups = new();
+        for (int ordinal = 0; ordinal < keys.Length; ordinal++)
+        {
+            if (groups.TryGetValue(keys[ordinal], out List<int> group))
+            {
+                group.Add(ordinal);
+            }
+            else
+            {
+                groups.Add(keys[ordinal], [ordinal]);
+            }
+        }
+
+        int[][] result = new int[groups.Count][];
+        int index = 0;
+        foreach (List<int> group in groups.Values)
+        {
+            result[index++] = group.ToArray();
+        }
+
+        return result;
+    }
+
+    private static Task<int[][]> StartPropagationPreparation(int[] keys)
+    {
+        return Task.Factory.StartNew(
+            static state => PreparePropagationGroups((int[])state!),
+            keys,
+            CancellationToken.None,
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default);
+    }
+
+    private static int[][] PreparePropagationGroupsOnWorker(int[] keys)
+    {
+        Task<int[][]> task;
+        if (ExecutionContext.IsFlowSuppressed())
+        {
+            task = StartPropagationPreparation(keys);
+        }
+        else
+        {
+            using (ExecutionContext.SuppressFlow())
+            {
+                task = StartPropagationPreparation(keys);
+            }
+        }
+
+        return task.GetAwaiter().GetResult();
     }
 
     public void Colorize(IEnumerable<ILightWithId>? selectLights, params Color?[] colors)

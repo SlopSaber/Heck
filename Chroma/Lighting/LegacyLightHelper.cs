@@ -1,38 +1,86 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Chroma.Lighting;
 
-// Please let me delete this whole class
 internal class LegacyLightHelper
 {
     internal const int RGB_INT_OFFSET = 2000000000;
 
+    private readonly Dictionary<BasicBeatmapEventType, List<(float Time, Color Color)>> _legacyColorEvents = new();
+    private readonly Dictionary<BasicBeatmapEventData, (int Type, float Time, Color? Color)> _preparedColors =
+        new(EventReferenceComparer.Instance);
+    private bool _colorEventsExposed;
+
     internal LegacyLightHelper(IEnumerable<BasicBeatmapEventData> eventData)
     {
+        List<BasicBeatmapEventData> events = new();
+        List<(int Type, float Time, int Value)> rows = new();
+        bool hasLegacyColors = false;
         foreach (BasicBeatmapEventData d in eventData)
         {
-            if (d.value < RGB_INT_OFFSET)
+            int value = d.value;
+            events.Add(d);
+            rows.Add(((int)d.basicBeatmapEventType, d.time, value));
+            hasLegacyColors |= value >= RGB_INT_OFFSET;
+        }
+
+        if (!hasLegacyColors)
+        {
+            return;
+        }
+
+        (float[] red, float[] green, float[] blue, int[] matches) =
+            LightEventPreparation.PrepareLegacyColors(rows.ToArray());
+        for (int i = 0; i < rows.Count; i++)
+        {
+            (int type, float time, int value) = rows[i];
+            if (value < RGB_INT_OFFSET)
             {
                 continue;
             }
 
-            if (!LegacyColorEvents.TryGetValue(d.basicBeatmapEventType, out List<(float, Color)> dictionaryID))
+            BasicBeatmapEventType eventType = (BasicBeatmapEventType)type;
+            if (!_legacyColorEvents.TryGetValue(eventType, out List<(float, Color)>? dictionaryID))
             {
                 dictionaryID = [];
-                LegacyColorEvents.Add(d.basicBeatmapEventType, dictionaryID);
+                _legacyColorEvents.Add(eventType, dictionaryID);
             }
 
-            dictionaryID.Add((d.time, ColorFromInt(d.value)));
+            dictionaryID.Add((time, new Color(red[i], green[i], blue[i])));
+        }
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            int match = matches[i];
+            Color? color = match < 0 ? null : new Color(red[match], green[match], blue[match]);
+            _preparedColors[events[i]] = (rows[i].Type, rows[i].Time, color);
         }
     }
 
-    internal Dictionary<BasicBeatmapEventType, List<(float Time, Color Color)>> LegacyColorEvents { get; } = new();
+    internal Dictionary<BasicBeatmapEventType, List<(float Time, Color Color)>> LegacyColorEvents
+    {
+        get
+        {
+            _colorEventsExposed = true;
+            return _legacyColorEvents;
+        }
+    }
 
     internal Color? GetLegacyColor(BasicBeatmapEventData beatmapEventData)
     {
-        if (!LegacyColorEvents.TryGetValue(
-                beatmapEventData.basicBeatmapEventType,
+        BasicBeatmapEventType type = beatmapEventData.basicBeatmapEventType;
+        if (!_colorEventsExposed &&
+            _preparedColors.TryGetValue(beatmapEventData, out (int Type, float Time, Color? Color) prepared) &&
+            prepared.Type == (int)type &&
+            prepared.Time.Equals(beatmapEventData.time))
+        {
+            return prepared.Color;
+        }
+
+        if (!_legacyColorEvents.TryGetValue(
+                type,
                 out List<(float, Color)> dictionaryID))
         {
             return null;
@@ -49,12 +97,18 @@ internal class LegacyLightHelper
         return null;
     }
 
-    private static Color ColorFromInt(int rgb)
+    private sealed class EventReferenceComparer : IEqualityComparer<BasicBeatmapEventData>
     {
-        rgb -= RGB_INT_OFFSET;
-        int red = (rgb >> 16) & 0x0ff;
-        int green = (rgb >> 8) & 0x0ff;
-        int blue = rgb & 0x0ff;
-        return new Color(red / 255f, green / 255f, blue / 255f);
+        internal static EventReferenceComparer Instance { get; } = new();
+
+        public bool Equals(BasicBeatmapEventData? x, BasicBeatmapEventData? y)
+        {
+            return ReferenceEquals(x, y);
+        }
+
+        public int GetHashCode(BasicBeatmapEventData obj)
+        {
+            return RuntimeHelpers.GetHashCode(obj);
+        }
     }
 }

@@ -172,42 +172,47 @@ internal class CustomDataDeserializer : IEarlyDeserializer, ICustomEventsDeseria
             }
         }
 
-        // Horrible stupid logic to get next same type event per light id
-        // what am i even doing anymore
-        Dictionary<int, Dictionary<int, BasicBeatmapEventData>> allNextSameTypes = new();
+        if (dictionary.Count == 0)
+        {
+            return dictionary;
+        }
+
+        ChromaEventData?[] eventDatas = new ChromaEventData?[beatmapEventDatas.Count];
+        (int Type, int[]? IDs, bool Valid, bool NeedsNext)[] rows =
+            new (int, int[]?, bool, bool)[beatmapEventDatas.Count];
         for (int i = beatmapEventDatas.Count - 1; i >= 0; i--)
         {
             BasicBeatmapEventData beatmapEventData = beatmapEventDatas[i];
-            if (!TryGetEventData(beatmapEventDatas[i], out ChromaEventData? currentEventData))
+            if (!TryGetEventData(beatmapEventData, out ChromaEventData? currentEventData))
             {
                 continue;
             }
 
-            int type = (int)beatmapEventData.basicBeatmapEventType;
-            if (!allNextSameTypes.TryGetValue(
-                    type,
-                    out Dictionary<int, BasicBeatmapEventData>? nextSameTypes))
+            eventDatas[i] = currentEventData;
+            rows[i] = (
+                (int)beatmapEventData.basicBeatmapEventType,
+                (int[]?)currentEventData.LightID?.Clone(),
+                true,
+                currentEventData.NextSameTypeEvent == null);
+        }
+
+        KeyValuePair<int, int>[]?[] links = LightEventPreparation.PrepareLinks(rows);
+        for (int i = beatmapEventDatas.Count - 1; i >= 0; i--)
+        {
+            ChromaEventData? eventData = eventDatas[i];
+            KeyValuePair<int, int>[]? snapshot = links[i];
+            if (eventData != null && eventData.NextSameTypeEvent == null && snapshot != null)
             {
-                allNextSameTypes[type] = nextSameTypes = new Dictionary<int, BasicBeatmapEventData>();
+                Dictionary<int, BasicBeatmapEventData> next = new(snapshot.Length);
+                foreach (KeyValuePair<int, int> link in snapshot)
+                {
+                    next.Add(link.Key, beatmapEventDatas[link.Value]);
+                }
+
+                eventData.NextSameTypeEvent = next;
             }
 
-            currentEventData.NextSameTypeEvent ??= new Dictionary<int, BasicBeatmapEventData>(nextSameTypes);
-            IEnumerable<int>? ids = currentEventData.LightID;
-            if (ids == null)
-            {
-                nextSameTypes[-1] = beatmapEventData;
-                foreach (int key in nextSameTypes.Keys.ToArray())
-                {
-                    nextSameTypes[key] = beatmapEventData;
-                }
-            }
-            else
-            {
-                foreach (int id in ids)
-                {
-                    nextSameTypes[id] = beatmapEventData;
-                }
-            }
+            links[i] = null;
         }
 
         return dictionary;

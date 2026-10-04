@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ModestTree;
 
 namespace Heck.Animation;
@@ -16,6 +19,9 @@ public interface IPointDefinition
 public abstract class PointDefinition<T> : IPointDefinition
     where T : struct
 {
+    private const int MIN_WORKER_VALUES = 128;
+    private const int MAX_CAPTURE_DEPTH = 64;
+
     private readonly List<IPointData> _points = [];
 
     [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor", Justification = "No instance variables used.")]
@@ -24,15 +30,16 @@ public abstract class PointDefinition<T> : IPointDefinition
         IEnumerable<List<object>> points = list.FirstOrDefault() is List<object>
             ? list.Cast<List<object>>()
             : new[] { list.Append(0).ToList() };
+        PreparedPoints? prepared = TryPreparePoints(list, points);
         foreach (List<object> rawPoint in points)
         {
             Functions easing = Functions.easeLinear;
             Modifier<T>[]? modifiers = null;
             string[]? flags = null;
             IValues[]? values = null;
-            foreach (IGrouping<GroupType, object> grouping in Group(rawPoint))
+            foreach (PreparedGroup grouping in GetGroups(rawPoint, prepared))
             {
-                object[] groupList = grouping.ToArray();
+                object[] groupList = grouping.Items;
                 switch (grouping.Key)
                 {
                     case GroupType.Value:
@@ -50,7 +57,7 @@ public abstract class PointDefinition<T> : IPointDefinition
                         break;
 
                     case GroupType.Modifier:
-                        modifiers = groupList.Cast<List<object>>().Select(DeserializeModifier).ToArray();
+                        modifiers = groupList.Cast<List<object>>().Select(n => DeserializeModifier(n, prepared)).ToArray();
                         break;
                 }
             }
@@ -177,14 +184,14 @@ public abstract class PointDefinition<T> : IPointDefinition
             });
     }
 
-    private Modifier<T> DeserializeModifier(List<object> list)
+    private Modifier<T> DeserializeModifier(List<object> list, PreparedPoints? prepared)
     {
         Modifier<T>[]? modifiers = null;
         Operation? operation = null;
         IValues[]? values = null;
-        foreach (IGrouping<GroupType, object> grouping in Group(list))
+        foreach (PreparedGroup grouping in GetGroups(list, prepared))
         {
-            object[] groupList = grouping.ToArray();
+            object[] groupList = grouping.Items;
             switch (grouping.Key)
             {
                 case GroupType.Value:
@@ -197,7 +204,7 @@ public abstract class PointDefinition<T> : IPointDefinition
                     break;
 
                 case GroupType.Modifier:
-                    modifiers = groupList.Cast<List<object>>().Select(DeserializeModifier).ToArray();
+                    modifiers = groupList.Cast<List<object>>().Select(n => DeserializeModifier(n, prepared)).ToArray();
                     break;
             }
         }
@@ -235,5 +242,274 @@ public abstract class PointDefinition<T> : IPointDefinition
                 r = m;
             }
         }
+    }
+
+    private static PreparedPoints? TryPreparePoints(IReadOnlyCollection<object> list, IEnumerable<List<object>> points)
+    {
+        if (Thread.CurrentThread.IsThreadPoolThread || list.GetType() != typeof(List<object>) ||
+            CultureInfo.CurrentCulture.GetType() != typeof(CultureInfo) ||
+            CultureInfo.CurrentUICulture.GetType() != typeof(CultureInfo))
+        {
+            return null;
+        }
+
+        List<object> root = (List<object>)list;
+        if ((root.Count < MIN_WORKER_VALUES - 1 && root.All(n => n is not List<object>)) ||
+            (root.Count == 1 && root[0] is List<object> single && single.GetType() == typeof(List<object>) &&
+             single.Count < MIN_WORKER_VALUES && single.All(n => n is not List<object>)))
+        {
+            return null;
+        }
+
+        Dictionary<List<object>, CapturedList> captured = new();
+        HashSet<List<object>> ancestors = [];
+        List<List<object>> owned = [];
+        int weight = 0;
+        try
+        {
+            foreach (List<object> point in points)
+            {
+                if (!TryCaptureList(point, 0, captured, ancestors, out CapturedList copy))
+                {
+                    return null;
+                }
+
+                owned.Add(copy.Owned);
+                weight = Math.Min(MIN_WORKER_VALUES, weight + copy.Weight);
+            }
+        }
+        catch (InvalidCastException)
+        {
+            // Preserve malformed point enumeration and earlier caller effects.
+            return null;
+        }
+
+        if (weight < MIN_WORKER_VALUES)
+        {
+            return null;
+        }
+
+        CultureInfo sourceCulture = CultureInfo.CurrentCulture;
+        Tuple<List<object>[], CultureInfo, CultureInfo> state = Tuple.Create(
+            owned.ToArray(),
+            CultureInfo.ReadOnly((CultureInfo)sourceCulture.Clone()),
+            CultureInfo.ReadOnly((CultureInfo)CultureInfo.CurrentUICulture.Clone()));
+        Task<Dictionary<List<object>, PreparedGroup[]>> task;
+        if (ExecutionContext.IsFlowSuppressed())
+        {
+            task = StartPreparation(state);
+        }
+        else
+        {
+            using (ExecutionContext.SuppressFlow())
+            {
+                task = StartPreparation(state);
+            }
+        }
+
+        Dictionary<List<object>, PreparedGroup[]> groups = task.GetAwaiter().GetResult();
+        Dictionary<List<object>, List<object>> originals = captured.ToDictionary(n => n.Value.Owned, n => n.Key);
+        return new PreparedPoints(sourceCulture, captured, originals, groups);
+    }
+
+    private static bool TryCaptureList(
+        List<object> source,
+        int depth,
+        Dictionary<List<object>, CapturedList> captured,
+        HashSet<List<object>> ancestors,
+        out CapturedList result)
+    {
+        result = null!;
+        if (captured.TryGetValue(source, out CapturedList previous))
+        {
+            if (depth + previous.Height >= MAX_CAPTURE_DEPTH)
+            {
+                return false;
+            }
+
+            result = previous;
+            return true;
+        }
+
+        if (source.GetType() != typeof(List<object>) || depth >= MAX_CAPTURE_DEPTH || !ancestors.Add(source))
+        {
+            return false;
+        }
+
+        try
+        {
+            object[] originalItems = source.ToArray();
+            List<object> owned = new(originalItems.Length);
+            int weight = Math.Min(MIN_WORKER_VALUES, originalItems.Length);
+            int height = 0;
+            foreach (object value in originalItems)
+            {
+                switch (value)
+                {
+                    case List<object> nested:
+                        if (!TryCaptureList(nested, depth + 1, captured, ancestors, out CapturedList child))
+                        {
+                            return false;
+                        }
+
+                        owned.Add(child.Owned);
+                        height = Math.Max(height, child.Height + 1);
+                        weight = Math.Min(MIN_WORKER_VALUES, weight + child.Weight);
+                        break;
+
+                    case null:
+                    case string:
+                    case double:
+                    case float:
+                    case decimal:
+                    case byte:
+                    case sbyte:
+                    case short:
+                    case ushort:
+                    case int:
+                    case uint:
+                    case long:
+                    case ulong:
+                    case bool:
+                    case char:
+                        owned.Add(value!);
+                        break;
+
+                    default:
+                        return false;
+                }
+            }
+
+            result = new CapturedList(owned, originalItems, weight, height);
+            captured.Add(source, result);
+            return true;
+        }
+        finally
+        {
+            ancestors.Remove(source);
+        }
+    }
+
+    private static Task<Dictionary<List<object>, PreparedGroup[]>> StartPreparation(
+        Tuple<List<object>[], CultureInfo, CultureInfo> state)
+    {
+        return Task.Factory.StartNew(
+            PrepareWithCulture,
+            state,
+            CancellationToken.None,
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default);
+    }
+
+    private static Dictionary<List<object>, PreparedGroup[]> PrepareWithCulture(object? state)
+    {
+        Tuple<List<object>[], CultureInfo, CultureInfo> owned = (Tuple<List<object>[], CultureInfo, CultureInfo>)state!;
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = owned.Item2;
+            CultureInfo.CurrentUICulture = owned.Item3;
+            Dictionary<List<object>, PreparedGroup[]> groups = new();
+            foreach (List<object> point in owned.Item1)
+            {
+                PrepareGroups(point, groups);
+            }
+
+            return groups;
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
+    }
+
+    private static void PrepareGroups(List<object> point, Dictionary<List<object>, PreparedGroup[]> groups)
+    {
+        if (groups.ContainsKey(point))
+        {
+            return;
+        }
+
+        PreparedGroup[] prepared = Group(point).Select(n => new PreparedGroup(n.Key, n.ToArray())).ToArray();
+        groups.Add(point, prepared);
+        foreach (PreparedGroup group in prepared)
+        {
+            if (group.Key != GroupType.Modifier)
+            {
+                continue;
+            }
+
+            foreach (List<object> child in group.Items)
+            {
+                PrepareGroups(child, groups);
+            }
+        }
+    }
+
+    private static IEnumerable<PreparedGroup> GetGroups(List<object> source, PreparedPoints? prepared)
+    {
+        if (prepared != null && ReferenceEquals(CultureInfo.CurrentCulture, prepared.Culture) &&
+            prepared.Captured.TryGetValue(source, out CapturedList captured) &&
+            MatchesSource(source, captured.OriginalItems))
+        {
+            return prepared.Groups[captured.Owned].Select(n => n.Key == GroupType.Modifier
+                ? new PreparedGroup(n.Key, n.Items.Select(child => (object)prepared.Originals[(List<object>)child]).ToArray())
+                : n);
+        }
+
+        return Group(source).Select(n => new PreparedGroup(n.Key, n.ToArray()));
+    }
+
+    private static bool MatchesSource(List<object> source, object[] originalItems)
+    {
+        if (source.Count != originalItems.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < originalItems.Length; i++)
+        {
+            if (!ReferenceEquals(source[i], originalItems[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private readonly struct PreparedGroup(GroupType key, object[] items)
+    {
+        internal GroupType Key { get; } = key;
+
+        internal object[] Items { get; } = items;
+    }
+
+    private sealed class CapturedList(List<object> owned, object[] originalItems, int weight, int height)
+    {
+        internal List<object> Owned { get; } = owned;
+
+        internal object[] OriginalItems { get; } = originalItems;
+
+        internal int Weight { get; } = weight;
+
+        internal int Height { get; } = height;
+    }
+
+    private sealed class PreparedPoints(
+        CultureInfo culture,
+        Dictionary<List<object>, CapturedList> captured,
+        Dictionary<List<object>, List<object>> originals,
+        Dictionary<List<object>, PreparedGroup[]> groups)
+    {
+        internal CultureInfo Culture { get; } = culture;
+
+        internal Dictionary<List<object>, CapturedList> Captured { get; } = captured;
+
+        internal Dictionary<List<object>, List<object>> Originals { get; } = originals;
+
+        internal Dictionary<List<object>, PreparedGroup[]> Groups { get; } = groups;
     }
 }

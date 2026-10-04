@@ -11,6 +11,7 @@ internal class LegacyLightHelper
     private readonly Dictionary<BasicBeatmapEventType, List<(float Time, Color Color)>> _legacyColorEvents = new();
     private readonly Dictionary<BasicBeatmapEventData, (int Type, float Time, Color? Color)> _preparedColors =
         new(EventReferenceComparer.Instance);
+
     private bool _colorEventsExposed;
 
     internal LegacyLightHelper(IEnumerable<BasicBeatmapEventData> eventData)

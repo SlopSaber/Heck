@@ -31,6 +31,7 @@ internal class NoodlePlayerInstaller : Installer
         Container.Bind<CutoutManager>().AsSingle();
         Container.Bind<AnimationHelper>().AsSingle();
         Container.BindInterfacesAndSelfTo<NoodleObjectsCallbacksManager>().AsSingle();
+        Container.BindInterfacesTo<NotePoolPrewarmer>().AsSingle();
         Container.BindInterfacesAndSelfTo<NoodlePlayerTransformManager>().AsSingle();
 
         // Custom Events

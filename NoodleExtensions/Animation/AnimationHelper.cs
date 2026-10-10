@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Heck;
 using Heck.Animation;
 using JetBrains.Annotations;
@@ -30,15 +29,16 @@ internal class AnimationHelper
     {
         Vector3? pathDefinitePosition = animationObject?.LocalDefinitePosition?.Interpolate(time);
 
-        if (!pathDefinitePosition.HasValue && tracks != null)
+        if (!pathDefinitePosition.HasValue && tracks is { Count: > 0 })
         {
             if (tracks.Count > 1)
             {
                 Vector3? sumPathDefinitePosition = null;
 
                 // ReSharper disable once LoopCanBeConvertedToQuery
-                foreach (Track track in tracks)
+                for (int i = 0; i < tracks.Count; i++)
                 {
+                    Track track = tracks[i];
                     sumPathDefinitePosition = SumVectorNullables(
                         sumPathDefinitePosition,
                         track.GetVector3PathProperty(DEFINITE_POSITION, time));
@@ -48,7 +48,7 @@ internal class AnimationHelper
             }
             else
             {
-                pathDefinitePosition = tracks.First().GetVector3PathProperty(DEFINITE_POSITION, time);
+                pathDefinitePosition = tracks[0].GetVector3PathProperty(DEFINITE_POSITION, time);
             }
         }
 
@@ -56,7 +56,7 @@ internal class AnimationHelper
         {
             Vector3? pathPosition = animationObject?.LocalPosition?.Interpolate(time);
             Vector3? positionOffset = null;
-            if (tracks != null)
+            if (tracks is { Count: > 0 })
             {
                 if (tracks.Count > 1)
                 {
@@ -64,8 +64,9 @@ internal class AnimationHelper
                     Vector3? sumPositionOffset = null;
                     bool hasPathPosition = pathPosition.HasValue;
 
-                    foreach (Track track in tracks)
+                    for (int i = 0; i < tracks.Count; i++)
                     {
+                        Track track = tracks[i];
                         if (!hasPathPosition)
                         {
                             sumPathPosition = SumVectorNullables(
@@ -87,7 +88,7 @@ internal class AnimationHelper
                 }
                 else
                 {
-                    Track track = tracks.First();
+                    Track track = tracks[0];
                     pathPosition ??= track.GetVector3PathProperty(OFFSET_POSITION, time);
                     positionOffset = SumVectorNullables(track.GetProperty<Vector3>(OFFSET_POSITION), pathPosition);
                 }
@@ -148,7 +149,7 @@ internal class AnimationHelper
             pathCuttable = animationObject.LocalCuttable?.Interpolate(time);
         }
 
-        if (tracks != null)
+        if (tracks is { Count: > 0 })
         {
             Vector3? trackPosition;
             Quaternion? trackRotation;
@@ -184,8 +185,9 @@ internal class AnimationHelper
                 bool hasPathDissolveArrow = pathDissolveArrow.HasValue;
                 bool hasPathCuttable = pathCuttable.HasValue;
 
-                foreach (Track? track in tracks)
+                for (int i = 0; i < tracks.Count; i++)
                 {
+                    Track track = tracks[i];
                     if (!hasPathPosition)
                     {
                         sumPathPosition = SumVectorNullables(
@@ -295,14 +297,14 @@ internal class AnimationHelper
             }
             else
             {
-                Track track = tracks.First();
+                Track track = tracks[0];
                 pathPosition ??= track.GetVector3PathProperty(OFFSET_POSITION, time);
                 pathRotation ??= track.GetQuaternionPathProperty(OFFSET_ROTATION, time);
                 pathScale ??= track.GetVector3PathProperty(SCALE, time);
                 pathLocalRotation ??= track.GetQuaternionPathProperty(LOCAL_ROTATION, time);
                 pathDissolve ??= track.GetLinearPathProperty(DISSOLVE, time);
                 pathDissolveArrow ??= track.GetLinearPathProperty(DISSOLVE_ARROW, time);
-                pathCuttable ??= track.GetLinearPathProperty(V2_CUTTABLE, time);
+                pathCuttable ??= track.GetLinearPathProperty(INTERACTABLE, time);
 
                 trackPosition = track.GetProperty<Vector3>(OFFSET_POSITION);
                 trackRotation = track.GetProperty<Quaternion>(OFFSET_ROTATION);

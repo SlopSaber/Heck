@@ -12,10 +12,12 @@ internal class ReplaceMovementDataProvider : IAffinity
             FieldAccessor<ObstacleControllerBase, IVariableMovementDataProvider>.GetAccessor(
                 nameof(ObstacleControllerBase._variableMovementDataProvider));
 
+#if !BEAT_SABER_1453
     private static readonly FieldAccessor<NoteMovement, IVariableMovementDataProvider>.Accessor
         _noteMovementMovementDataProvider =
             FieldAccessor<NoteMovement, IVariableMovementDataProvider>.GetAccessor(
                 nameof(NoteMovement._variableMovementDataProvider));
+#endif
 
     private static readonly FieldAccessor<NoteFloorMovement, IVariableMovementDataProvider>.Accessor
         _noteFloorMovementMovementDataProvider =
@@ -71,7 +73,9 @@ internal class ReplaceMovementDataProvider : IAffinity
         NoteJump noteJump = noteMovement._jump;
         NoteWaiting noteWaiting = noteMovement._waiting;
         NoodleMovementDataProvider newProvider = _noodleProviderPool.Spawn(noteData);
+#if !BEAT_SABER_1453
         _noteMovementMovementDataProvider(ref noteMovement) = newProvider;
+#endif
         _noteFloorMovementMovementDataProvider(ref noteFloorMovement) = newProvider;
         _noteJumpMovementDataProvider(ref noteJump) = newProvider;
         _noteWaitingMovementDataProvider(ref noteWaiting) = newProvider;
@@ -114,7 +118,11 @@ internal class ReplaceMovementDataProvider : IAffinity
         new[] { typeof(NoteController) })]
     private void DespawnNoteMovement(NoteController noteController)
     {
+#if BEAT_SABER_1453
+        if (noteController._noteMovement._jump._variableMovementDataProvider is NoodleMovementDataProvider noodleMovementDataProvider)
+#else
         if (noteController._noteMovement._variableMovementDataProvider is NoodleMovementDataProvider noodleMovementDataProvider)
+#endif
         {
             _noodleProviderPool.Despawn(noodleMovementDataProvider);
         }

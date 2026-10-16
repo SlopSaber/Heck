@@ -107,9 +107,13 @@ internal class NoteInitNoodlifier : IAffinity, IDisposable
         Vector3 moveStartPos = noteSpawnData.moveStartOffset;
         Vector3 moveEndPos = noteSpawnData.moveEndOffset;
         Vector3 jumpEndPos = noteSpawnData.jumpEndOffset;
-        float jumpGravity =
-            ____noteMovement._variableMovementDataProvider.CalculateCurrentNoteJumpGravity(noteSpawnData.gravityBase);
-        float halfJumpDuration = ____noteMovement._variableMovementDataProvider.halfJumpDuration;
+#if BEAT_SABER_1453
+        IVariableMovementDataProvider variableMovementDataProvider = ____noteMovement._jump._variableMovementDataProvider;
+#else
+        IVariableMovementDataProvider variableMovementDataProvider = ____noteMovement._variableMovementDataProvider;
+#endif
+        float jumpGravity = variableMovementDataProvider.CalculateCurrentNoteJumpGravity(noteSpawnData.gravityBase);
+        float halfJumpDuration = variableMovementDataProvider.halfJumpDuration;
 #else
         float halfJumpDuration = jumpDuration * 0.5f;
 #endif

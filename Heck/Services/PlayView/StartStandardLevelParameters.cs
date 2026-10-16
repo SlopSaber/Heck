@@ -8,32 +8,7 @@ namespace Heck.PlayView;
 
 public class StartStandardLevelParameters
 {
-#if BEAT_SABER_1453
-    internal static StartStandardLevelParameters FromGame(
-        global::GameMode gameMode,
-        in BeatmapKey beatmapKey,
-        BeatmapLevel beatmapLevel,
-        OverrideEnvironmentSettings? overrideEnvironmentSettings,
-        ColorScheme? overrideColorScheme,
-        bool playerOverrideLightshowColors,
-        GameplayModifiers gameplayModifiers,
-        PlayerSpecificSettings playerSpecificSettings,
-        PracticeSettings? practiceSettings,
-        EnvironmentsListModel? environmentsListModel,
-        GameplayAdditionalInformation? gameplayAdditionalInformation,
-        Action? beforeSceneSwitchToGameplayCallback,
-        Action<DiContainer>? afterSceneSwitchToGameplayCallback,
-        Action<StandardLevelScenesTransitionSetupData, LevelCompletionResults>? levelFinishedCallback,
-        Action<LevelScenesTransitionSetupData, LevelCompletionResults>? levelRestartedCallback,
-        IBeatmapLevelData? beatmapLevelData)
-    {
-        return new StartStandardLevelParameters(gameMode.ToString(), in beatmapKey, beatmapLevel,
-            overrideEnvironmentSettings, overrideColorScheme, playerOverrideLightshowColors,
-            gameplayModifiers, playerSpecificSettings, practiceSettings, environmentsListModel,
-            gameplayAdditionalInformation, beforeSceneSwitchToGameplayCallback, afterSceneSwitchToGameplayCallback,
-            levelFinishedCallback, levelRestartedCallback, beatmapLevelData);
-    }
-#endif
+
 
     [UsedImplicitly]
     public StartStandardLevelParameters(
@@ -233,4 +208,30 @@ public class StartStandardLevelParameters
     {
         return new StartStandardLevelParameters(this);
     }
+#if BEAT_SABER_1453
+    internal static StartStandardLevelParameters FromGame(
+        global::GameMode gameMode,
+        in BeatmapKey beatmapKey,
+        BeatmapLevel beatmapLevel,
+        OverrideEnvironmentSettings? overrideEnvironmentSettings,
+        ColorScheme? overrideColorScheme,
+        bool playerOverrideLightshowColors,
+        GameplayModifiers gameplayModifiers,
+        PlayerSpecificSettings playerSpecificSettings,
+        PracticeSettings? practiceSettings,
+        EnvironmentsListModel? environmentsListModel,
+        GameplayAdditionalInformation? gameplayAdditionalInformation,
+        Action? beforeSceneSwitchToGameplayCallback,
+        Action<DiContainer>? afterSceneSwitchToGameplayCallback,
+        Action<StandardLevelScenesTransitionSetupData, LevelCompletionResults>? levelFinishedCallback,
+        Action<LevelScenesTransitionSetupData, LevelCompletionResults>? levelRestartedCallback,
+        IBeatmapLevelData? beatmapLevelData)
+    {
+        return new StartStandardLevelParameters(gameMode.ToString(), in beatmapKey, beatmapLevel,
+            overrideEnvironmentSettings, overrideColorScheme, playerOverrideLightshowColors,
+            gameplayModifiers, playerSpecificSettings, practiceSettings, environmentsListModel,
+            gameplayAdditionalInformation, beforeSceneSwitchToGameplayCallback, afterSceneSwitchToGameplayCallback,
+            levelFinishedCallback, levelRestartedCallback, beatmapLevelData);
+    }
+#endif
 }

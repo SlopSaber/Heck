@@ -1,5 +1,9 @@
 ﻿using JetBrains.Annotations;
 
+#if BEAT_SABER_1453
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullWhenAttribute))]
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute))]
+#else
 // ReSharper disable once CheckNamespace
 namespace System.Diagnostics.CodeAnalysis;
 
@@ -49,3 +53,4 @@ public sealed class NotNullIfNotNullAttribute : Attribute
     /// <summary>Gets the associated parameter name.</summary>
     public string ParameterName { get; }
 }
+#endif

@@ -8,8 +8,6 @@ namespace Heck.PlayView;
 
 public class StartStandardLevelParameters
 {
-
-
     [UsedImplicitly]
     public StartStandardLevelParameters(
         string gameMode,
@@ -208,6 +206,7 @@ public class StartStandardLevelParameters
     {
         return new StartStandardLevelParameters(this);
     }
+
 #if BEAT_SABER_1453
     internal static StartStandardLevelParameters FromGame(
         global::GameMode gameMode,
@@ -227,11 +226,23 @@ public class StartStandardLevelParameters
         Action<LevelScenesTransitionSetupData, LevelCompletionResults>? levelRestartedCallback,
         IBeatmapLevelData? beatmapLevelData)
     {
-        return new StartStandardLevelParameters(gameMode.ToString(), in beatmapKey, beatmapLevel,
-            overrideEnvironmentSettings, overrideColorScheme, playerOverrideLightshowColors,
-            gameplayModifiers, playerSpecificSettings, practiceSettings, environmentsListModel,
-            gameplayAdditionalInformation, beforeSceneSwitchToGameplayCallback, afterSceneSwitchToGameplayCallback,
-            levelFinishedCallback, levelRestartedCallback, beatmapLevelData);
+        return new StartStandardLevelParameters(
+            gameMode.ToString(),
+            in beatmapKey,
+            beatmapLevel,
+            overrideEnvironmentSettings,
+            overrideColorScheme,
+            playerOverrideLightshowColors,
+            gameplayModifiers,
+            playerSpecificSettings,
+            practiceSettings,
+            environmentsListModel,
+            gameplayAdditionalInformation,
+            beforeSceneSwitchToGameplayCallback,
+            afterSceneSwitchToGameplayCallback,
+            levelFinishedCallback,
+            levelRestartedCallback,
+            beatmapLevelData);
     }
 #endif
 }

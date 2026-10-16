@@ -1,4 +1,5 @@
-﻿using SiraUtil.Affinity;
+﻿#if !BSIPA_MODS
+using SiraUtil.Affinity;
 using SiraUtil.Tools.FPFC;
 using UnityEngine;
 
@@ -24,3 +25,14 @@ internal class SiraUtilHeadFinder : IAffinity
         FpfcHeadTransform = null;
     }
 }
+
+#else
+using UnityEngine;
+
+namespace Heck.HarmonyPatches;
+
+internal class SiraUtilHeadFinder
+{
+    internal Transform? FpfcHeadTransform => null;
+}
+#endif

@@ -17,8 +17,13 @@ internal class PlayViewInterrupter : IAffinity
         typeof(SinglePlayerLevelSelectionFlowCoordinator),
         "_menuTransitionsHelper");
 
+#if BEAT_SABER_1453
+    private static readonly MethodInfo _standardLevelParametersFactory =
+        AccessTools.Method(typeof(StartStandardLevelParameters), nameof(StartStandardLevelParameters.FromGame));
+#else
     private static readonly ConstructorInfo _standardLevelParametersCtor =
         AccessTools.FirstConstructor(typeof(StartStandardLevelParameters), _ => true);
+#endif
 
 #if PRE_V1_37_1
     private static readonly ConstructorInfo _multiplayerLevelParametersCtor =
@@ -67,7 +72,11 @@ internal class PlayViewInterrupter : IAffinity
                     new CodeMatch(
                         n => n.opcode == OpCodes.Callvirt &&
                              ((MethodInfo)n.operand).Name == nameof(MenuTransitionsHelper.StartStandardLevel)))
+#if BEAT_SABER_1453
+                .SetInstruction(new CodeInstruction(OpCodes.Call, _standardLevelParametersFactory))
+#else
                 .SetInstruction(new CodeInstruction(OpCodes.Newobj, _standardLevelParametersCtor))
+#endif
                 .InstructionEnumeration();
         }
     }

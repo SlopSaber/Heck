@@ -170,7 +170,11 @@ public sealed class PlayViewManager : IDisposable
         _lobbyGameStateController.StopListeningToGameStart();
 
         _menuTransitionsHelper.StartMultiplayerLevel(
+#if BEAT_SABER_1453
+            (GameMode)Enum.Parse(typeof(GameMode), multiplayerStartParameters.GameMode),
+#else
             multiplayerStartParameters.GameMode,
+#endif
 #if !PRE_V1_37_1
             multiplayerStartParameters.BeatmapKey,
             multiplayerStartParameters.BeatmapLevel,
@@ -282,7 +286,11 @@ public sealed class PlayViewManager : IDisposable
         }
 
         _menuTransitionsHelper.StartStandardLevel(
+#if BEAT_SABER_1453
+            (GameMode)Enum.Parse(typeof(GameMode), _currentParameters.GameMode),
+#else
             _currentParameters.GameMode,
+#endif
 #if !PRE_V1_37_1
             _currentParameters.BeatmapKey,
             _currentParameters.BeatmapLevel,

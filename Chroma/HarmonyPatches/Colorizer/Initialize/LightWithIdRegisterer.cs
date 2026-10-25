@@ -54,17 +54,49 @@ internal class LightWithIdRegisterer : IAffinity
 
     [AffinityPrefix]
     [AffinityPatch(typeof(LightWithIdManager), nameof(LightWithIdManager.UnregisterLight))]
-    private bool DontClearList(ILightWithId lightWithId)
+    private bool DontClearList(LightWithIdManager __instance, ILightWithId lightWithId)
     {
+        if (__instance != _lightWithIdManager || (lightWithId.groupId != -1 && lightWithId.elementId != -1))
+        {
+            return true;
+        }
+
         lightWithId.__SetIsUnRegistered();
+        return false;
+    }
+
+    [AffinityPrefix]
+    [AffinityPatch(typeof(LightWithIdManager), nameof(LightWithIdManager.RegisterLight))]
+    private bool PreserveRegistration(LightWithIdManager __instance, ILightWithId lightWithId)
+    {
+        if (__instance != _lightWithIdManager || (lightWithId.groupId != -1 && lightWithId.elementId != -1))
+        {
+            return true;
+        }
+
+        if (lightWithId.isRegistered)
+        {
+            return false;
+        }
+
+        int lightId = lightWithId.lightId;
+        if (lightId < 0 || lightId >= __instance._oldMapping.Length ||
+            Array.IndexOf(__instance._oldMapping[lightId]?.lightInstances ?? [], lightWithId) < 0)
+        {
+            return true;
+        }
+
+        // Reactivation keeps the stable mapping index and its existing color tween.
+        lightWithId.__SetIsRegistered();
         return false;
     }
 
     [AffinityPostfix]
     [AffinityPatch(typeof(LightWithIdManager), nameof(LightWithIdManager.RegisterLight))]
-    private void Postfix(LightWithIdManager __instance, ILightWithId lightWithId)
+    private void Postfix(LightWithIdManager __instance, ILightWithId lightWithId, bool __runOriginal)
     {
-        if (__instance.gameObject.scene.name.Contains("Menu") || !lightWithId.isRegistered)
+        if (!__runOriginal || __instance != _lightWithIdManager || !lightWithId.isRegistered ||
+            (lightWithId.groupId != -1 && lightWithId.elementId != -1))
         {
             return;
         }
@@ -75,7 +107,7 @@ internal class LightWithIdRegisterer : IAffinity
             return;
         }
 
-        ILightWithId[] lights = __instance._oldMapping[lightId].lightInstances ?? [];
+        ILightWithId[] lights = __instance._oldMapping[lightId]?.lightInstances ?? [];
         int index = Array.IndexOf(lights, lightWithId);
         if (index < 0)
         {
@@ -90,7 +122,13 @@ internal class LightWithIdRegisterer : IAffinity
 
         _colorizerManager.CreateLightColorizerContractByLightID(
             lightId,
-            n => n.ChromaLightSwitchEventEffect.RegisterLight(lightWithId, index));
+            n =>
+            {
+                if (!n.ChromaLightSwitchEventEffect.ColorTweens.ContainsKey(lightWithId))
+                {
+                    n.ChromaLightSwitchEventEffect.RegisterLight(lightWithId, index);
+                }
+            });
         lightWithId.ColorWasSet(__instance.GetColorForId(lightId, true));
     }
 }

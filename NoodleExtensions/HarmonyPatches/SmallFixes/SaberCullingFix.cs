@@ -11,7 +11,9 @@ namespace NoodleExtensions.HarmonyPatches.SmallFixes;
 [HarmonyPatch(typeof(SaberTrailRenderer))]
 internal static class SaberCullingFix
 {
-    private static readonly Bounds _bounds = new(Vector3.zero, Vector3.positiveInfinity);
+    // Never cull trails, but keep the box finite: Unity 6 turns infinite extents into
+    // NaN world bounds and asserts "Invalid AABB" on every culling pass.
+    private static readonly Bounds _bounds = new(Vector3.zero, Vector3.one * 1_000_000f);
     private static readonly MethodInfo _boundsSetter = AccessTools.PropertySetter(typeof(Mesh), nameof(Mesh.bounds));
 
     [HarmonyPostfix]

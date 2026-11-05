@@ -99,6 +99,12 @@ internal class SettingsSetterViewController : BSMLResourceViewController, IPlayV
     public bool Init(StartStandardLevelParameters startParameters)
     {
         _declined = true;
+#if !PRE_V1_37_1
+        if (startParameters.BeatmapLevel == null)
+        {
+            return false;
+        }
+#endif
 
         // When in doubt, wrap everything in one big try catch statement!
         try

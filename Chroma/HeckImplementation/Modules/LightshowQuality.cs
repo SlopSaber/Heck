@@ -142,15 +142,31 @@ internal static class LightshowQuality
             return false;
         }
 
-        bool hasBoxGroups = V3BoxGroups.IsMatch(text) || V4BoxGroups.IsMatch(text);
         bool quality = EnvironmentEdits.IsMatch(text) ||
-                       LightIds.Matches(text).Count >= MinLightIds ||
-                       Gradients.Matches(text).Count >= MinGradients ||
-                       Colors.Matches(text).Count >= MinColors ||
-                       (hasBoxGroups && BoxGroupEntries.Matches(text).Count >= MinBoxGroups);
+                       HasAtLeast(LightIds, text, MinLightIds) ||
+                       HasAtLeast(Gradients, text, MinGradients) ||
+                       HasAtLeast(Colors, text, MinColors) ||
+                       ((V3BoxGroups.IsMatch(text) || V4BoxGroups.IsMatch(text)) &&
+                        HasAtLeast(BoxGroupEntries, text, MinBoxGroups));
         Cache[path] = (written, quality);
         Plugin.Log.Debug($"Lightshow in [{Path.GetFileName(path)}] {(quality ? "meets" : "does not meet")} the quality threshold.");
         return quality;
+    }
+
+    // Counting a whole MatchCollection scans the full file and allocates every match; the thresholds
+    // only need to know whether enough matches exist.
+    private static bool HasAtLeast(Regex regex, string text, int count)
+    {
+        int found = 0;
+        for (Match match = regex.Match(text); match.Success; match = match.NextMatch())
+        {
+            if (++found >= count)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // SongCore rejects direct reads of cached difficulty files; the game's level data reader is the

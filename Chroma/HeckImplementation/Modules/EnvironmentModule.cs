@@ -1,13 +1,16 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Chroma.EnvironmentEnhancement.Saved;
 using Chroma.Settings;
 using Heck;
 using Heck.Module;
+#if !PRE_V1_37_1
+using CustomJSONData;
+#endif
 using static Chroma.ChromaController;
 #if !PRE_V1_37_1
 using _EnvironmentType = EnvironmentType;
 #else
-using System.Collections.Generic;
 using CustomJSONData;
 using CustomJSONData.CustomBeatmap;
 using _EnvironmentType = EnvironmentTypeSO;
@@ -19,35 +22,6 @@ namespace Chroma.Modules;
 [ModulePatcher(HARMONY_ID + "Environment", PatchType.Environment)]
 internal class EnvironmentModule : IModule
 {
-    // if there is a better way to detect v3 lights, i would love to know it
-    // blacklist because likely this list will never need to be updated
-    private static readonly string[] _basicEnvironments =
-    [
-        "DefaultEnvironment",
-        "TriangleEnvironment",
-        "NiceEnvironment",
-        "BigMirrorEnvironment",
-        "KDAEnvironment",
-        "MonstercatEnvironment",
-        "CrabRaveEnvironment",
-        "DragonsEnvironment",
-        "OriginsEnvironment",
-        "PanicEnvironment",
-        "RocketEnvironment",
-        "GreenDayEnvironment",
-        "GreenDayGrenadeEnvironment",
-        "TimbalandEnvironment",
-        "FitBeatEnvironment",
-        "LinkinParkEnvironment",
-        "BTSEnvironment",
-        "KaleidoscopeEnvironment",
-        "InterscopeEnvironment",
-        "SkrillexEnvironment",
-        "BillieEnvironment",
-        "HalloweenEnvironment",
-        "GagaEnvironment"
-    ];
-
     private readonly Config _config;
     private readonly SavedEnvironmentLoader _savedEnvironmentLoader;
 #if !PRE_V1_37_1
@@ -117,9 +91,17 @@ internal class EnvironmentModule : IModule
 #endif
         _EnvironmentType type = environmentInfo.environmentType;
 
-        bool settingForce = (_config.ForceMapEnvironmentWhenChroma && dependency) ||
-                            (_config.ForceMapEnvironmentWhenV3 &&
-                             !_basicEnvironments.Contains(environmentInfo._serializedName));
+#if !PRE_V1_37_1
+        // Vivify maps replace the scene with their own content and rely on their environment edits.
+        bool vivify = dependency &&
+                      (beatmapLevel.GetBeatmapCustomData(beatmapKey).Get<List<object>>("_requirements")?
+                          .Any(requirement => requirement as string == "Vivify") ?? false);
+        bool settingForce = vivify ||
+                            (_config.ForceMapEnvironmentWhenQualityLights &&
+                             LightshowQuality.IsQuality(beatmapLevel, in beatmapKey));
+#else
+        bool settingForce = _config.ForceMapEnvironmentWhenQualityLights && dependency;
+#endif
 
 #if PRE_V1_37_1
         Version3CustomBeatmapSaveData? customBeatmapSaveData = difficultyBeatmap.GetBeatmapSaveData();

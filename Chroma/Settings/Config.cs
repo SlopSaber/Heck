@@ -52,9 +52,7 @@ internal static class ChromaSettableSettings
 [UsedImplicitly(ImplicitUseTargetFlags.Members)]
 internal class Config
 {
-    public bool ForceMapEnvironmentWhenChroma { get; set; }
-
-    public bool ForceMapEnvironmentWhenV3 { get; set; }
+    public bool ForceMapEnvironmentWhenQualityLights { get; set; } = true;
 
     public bool PrintEnvironmentEnhancementDebug { get; set; }
 

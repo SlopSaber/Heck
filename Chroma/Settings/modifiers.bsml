@@ -14,9 +14,7 @@
                   hover-hint='Disable everything Chroma, but you&apos;ll break my heart.'/>
     <bool-setting text='Force Zen Mode Walls' value='zenwalls' apply-on-change='true'
                   hover-hint='Forces walls to be enabled in the Zen Mode modifier.'/>
-    <bool-setting text='Force Map Environment When Chroma' value='forcemapenvchroma' apply-on-change='true'
-                  hover-hint='Force the map environment when Chroma data is present.'/>
-    <bool-setting text='Force Map Environment When V3' value='forcemapenvv3' apply-on-change='true'
-                  hover-hint='Force the map environment when using v3 custom data.'/>
+    <bool-setting text='Force Map Environment When Quality Lights' value='forcemapenvquality' apply-on-change='true'
+                  hover-hint='Use the map environment only when the map has an authored lightshow; auto-lit maps keep your environment.'/>
   </vertical>
 </bg>

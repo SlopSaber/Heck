@@ -113,7 +113,7 @@ internal class LightIDTableManager
             return null;
         }
 
-        _log.Error($"Unable to find value for light ID [{lightID}] and id [{id}], omitting future errors of same id...");
+        _log.Debug($"Map references missing light ID [{id}] in light group [{lightID}]; omitting future reports of the same ID.");
         _failureLog.Add(failure);
 
         return null;

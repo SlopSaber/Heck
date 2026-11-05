@@ -107,5 +107,11 @@ internal class Config
     }
 
     public string? CustomEnvironment { get; set; }
+
+    public virtual float MaxLightBrightness
+    {
+        get => Lighting.LightBrightnessLimit.Value;
+        set => Lighting.LightBrightnessLimit.Value = value;
+    }
 #pragma warning restore CA1822
 }

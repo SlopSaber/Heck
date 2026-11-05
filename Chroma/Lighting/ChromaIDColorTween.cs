@@ -62,6 +62,6 @@ public sealed class ChromaIDColorTween : ColorTween
         }
 
         _lightWithIdManager._didChangeSomeColorsThisFrame = true;
-        _lightWithId.ColorWasSet(color);
+        _lightWithId.ColorWasSet(LightBrightnessLimit.Apply(color));
     }
 }

@@ -172,14 +172,6 @@ internal class ChromaSettingsUI : IInitializable, IDisposable
     }
 
     [UsedImplicitly]
-    [UIValue("maxbrightness")]
-    public float MaxLightBrightness
-    {
-        get => _config.MaxLightBrightness;
-        set => _config.MaxLightBrightness = value;
-    }
-
-    [UsedImplicitly]
     [UIAction("environmentformat")]
     private string FormatCustomEnvironment(string? name)
     {
@@ -190,13 +182,6 @@ internal class ChromaSettingsUI : IInitializable, IDisposable
 
         SavedEnvironment environment = _savedEnvironmentLoader.Environments[name]!;
         return $"{environment.Name} v{environment.EnvironmentVersion}";
-    }
-
-    [UsedImplicitly]
-    [UIAction("brightnessformat")]
-    private string FormatMaxLightBrightness(float value)
-    {
-        return value >= Lighting.LightBrightnessLimit.Unlimited ? "Off" : $"{value:0.0}x";
     }
 #pragma warning restore CA1822
 }

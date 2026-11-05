@@ -12,9 +12,6 @@
     <bool-setting text='Disable Note Coloring' value='notecolors' apply-on-change='true' hover-hint='Blame Mawntee.'/>
     <bool-setting text='Disable Chroma Events' value='rgbevents' apply-on-change='true'
                   hover-hint='Disable everything Chroma, but you&apos;ll break my heart.'/>
-    <slider-setting text='Max Light Brightness' value='maxbrightness' min='1' max='10' increment='0.5'
-                    apply-on-change='true' formatter='brightnessformat'
-                    hover-hint='Caps how bright map lights can get, which keeps over-bright lighting from flooding the screen with bloom.'/>
     <bool-setting text='Force Zen Mode Walls' value='zenwalls' apply-on-change='true'
                   hover-hint='Forces walls to be enabled in the Zen Mode modifier.'/>
     <bool-setting text='Force Map Environment When Chroma' value='forcemapenvchroma' apply-on-change='true'

@@ -303,7 +303,6 @@ internal class SpawnDataManager
         float spawnOffset = inputOffset ?? _initData.noteJumpValue;
         BeatmapObjectSpawnMovementData.NoteJumpValueType noteJumpValueType = _initData.noteJumpValueType;
         if (noteJumpValueType == BeatmapObjectSpawnMovementData.NoteJumpValueType.JumpDuration &&
-            !inputNjs.HasValue &&
             !inputOffset.HasValue)
         {
             return spawnOffset * 2f;

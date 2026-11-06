@@ -121,7 +121,7 @@ internal class NoodleMovementDataProvider : IVariableMovementDataProvider
         float njs = _noteJumpSpeedOverride ?? _original.noteJumpSpeed;
         float spawnOffset = noodleData.SpawnOffset ?? _noteJumpStartBeatOffset;
         BeatmapObjectSpawnMovementData.NoteJumpValueType noteJumpValueType =
-            _noteJumpSpeedOverride.HasValue || noodleData.SpawnOffset.HasValue
+            noodleData.SpawnOffset.HasValue
                 ? BeatmapObjectSpawnMovementData.NoteJumpValueType.BeatOffset
                 : _noteJumpValueType;
         switch (noteJumpValueType)

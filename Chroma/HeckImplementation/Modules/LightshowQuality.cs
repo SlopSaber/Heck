@@ -16,13 +16,13 @@ internal static class LightshowQuality
     private const int MinLightIds = 50;
     private const int MinGradients = 10;
     private const int MinColors = 300;
-    private const int MinBoxGroups = 20;
+    private const int MinBoxGroups = 10;
 
     private static readonly Regex EnvironmentEdits = new(@"""_?environment""\s*:\s*\[\s*\{", RegexOptions.Compiled);
     private static readonly Regex LightIds = new(@"""_?lightID""\s*:", RegexOptions.Compiled);
     private static readonly Regex Gradients = new(@"""_?(lightGradient|gradient)""\s*:", RegexOptions.Compiled);
     private static readonly Regex Colors = new(@"""_?color""\s*:", RegexOptions.Compiled);
-    private static readonly Regex V3BoxGroups = new(@"""lightColorEventBoxGroups""\s*:\s*\[\s*\{", RegexOptions.Compiled);
+    private static readonly Regex V3BoxGroups = new(@"""light(Color|Rotation|Translation)EventBoxGroups""\s*:\s*\[\s*\{", RegexOptions.Compiled);
     private static readonly Regex V4BoxGroups = new(@"""eventBoxGroups""\s*:\s*\[\s*\{", RegexOptions.Compiled);
     private static readonly Regex BoxGroupEntries = new(@"""g""\s*:", RegexOptions.Compiled);
 
@@ -69,7 +69,7 @@ internal static class LightshowQuality
         return string.IsNullOrEmpty(path) ? null : Path.GetDirectoryName(path);
     }
 
-    private static IEnumerable<(string Path, bool Lightshow)> GetDifficultyFiles(string folder, string? characteristic, string difficulty)
+    private static IEnumerable<string> GetDifficultyFiles(string folder, string? characteristic, string difficulty)
     {
         string? infoPath = Directory.EnumerateFiles(folder)
             .FirstOrDefault(file => string.Equals(Path.GetFileName(file), "Info.dat", StringComparison.OrdinalIgnoreCase));
@@ -94,7 +94,7 @@ internal static class LightshowQuality
                     if (string.Equals((string?)beatmap["_difficulty"], difficulty, StringComparison.OrdinalIgnoreCase) &&
                         (string?)beatmap["_beatmapFilename"] is { } file)
                     {
-                        yield return (Path.Combine(folder, file), false);
+                        yield return Path.Combine(folder, file);
                     }
                 }
             }
@@ -111,20 +111,19 @@ internal static class LightshowQuality
 
                 if ((string?)beatmap["beatmapDataFilename"] is { } beatmapFile)
                 {
-                    yield return (Path.Combine(folder, beatmapFile), false);
+                    yield return Path.Combine(folder, beatmapFile);
                 }
 
                 if ((string?)beatmap["lightshowDataFilename"] is { } lightshowFile)
                 {
-                    yield return (Path.Combine(folder, lightshowFile), true);
+                    yield return Path.Combine(folder, lightshowFile);
                 }
             }
         }
     }
 
-    private static bool IsQualityFile((string Path, bool Lightshow) file, BeatmapKey beatmapKey)
+    private static bool IsQualityFile(string path, BeatmapKey beatmapKey)
     {
-        string path = file.Path;
         if (!File.Exists(path))
         {
             return false;
@@ -136,7 +135,7 @@ internal static class LightshowQuality
             return cached.Quality;
         }
 
-        string? text = ReadDifficulty(path, file.Lightshow, beatmapKey);
+        string? text = ReadDifficulty(path, beatmapKey);
         if (text == null)
         {
             return false;
@@ -171,7 +170,7 @@ internal static class LightshowQuality
 
     // SongCore rejects direct reads of cached difficulty files; the game's level data reader is the
     // supported path to their contents.
-    private static string? ReadDifficulty(string path, bool lightshow, BeatmapKey beatmapKey)
+    private static string? ReadDifficulty(string path, BeatmapKey beatmapKey)
     {
         FileSystemBeatmapLevelData levelData = new(
             string.Empty,
@@ -179,9 +178,12 @@ internal static class LightshowQuality
             string.Empty,
             new Dictionary<(BeatmapCharacteristic, BeatmapDifficulty), FileDifficultyBeatmap>
             {
-                [(beatmapKey.characteristic, beatmapKey.difficulty)] = new(lightshow ? string.Empty : path, lightshow ? path : string.Empty),
+                [(beatmapKey.characteristic, beatmapKey.difficulty)] = new(path, string.Empty),
             });
-        return lightshow ? levelData.GetLightshowString(in beatmapKey) : levelData.GetBeatmapString(in beatmapKey);
+
+        // Read both JSON formats through the beatmap reader: the synchronous lightshow getter in
+        // some game versions checks the lightshow path but then reads the beatmap path instead.
+        return levelData.GetBeatmapString(in beatmapKey);
     }
 }
 #endif
